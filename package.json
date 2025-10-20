@@ -1,0 +1,34 @@
+{
+  "name": "@eneco/api-schema-validator",
+  "version": "1.0.0",
+  "description": "A flexible JSON schema validation library for API testing with automatic schema generation and synchronous/asynchronous validation support",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "node test/test.js",
+    "example": "node examples/basic-usage.js"
+  },
+  "keywords": [
+    "json-schema",
+    "validation",
+    "api-testing",
+    "schema-validation",
+    "contract-testing",
+    "bruno",
+    "api",
+    "testing"
+  ],
+  "author": "Eneco VPP Testing Team",
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^8.12.0",
+    "generate-schema": "^2.6.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Vikaseneco/api-schema-validator.git"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
