@@ -1,0 +1,71 @@
+name: Build and Publish to Azure Artifacts
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/registry/'
+          scope: '@eneco'
+      
+      - name: Install dependencies
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.AZURE_ARTIFACTS_TOKEN }}
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build package
+        run: echo "Build completed successfully"
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/registry/'
+          scope: '@eneco'
+      
+      - name: Configure npm authentication
+        run: |
+          echo "//pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/registry/:username=enecomanagedcloud" >> .npmrc
+          echo "//pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/registry/:_password=${{ secrets.AZURE_ARTIFACTS_TOKEN }}" >> .npmrc
+          echo "//pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/registry/:email=npm.registry@enecomanagedcloud.com" >> .npmrc
+          echo "//pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/:username=enecomanagedcloud" >> .npmrc
+          echo "//pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/:_password=${{ secrets.AZURE_ARTIFACTS_TOKEN }}" >> .npmrc
+          echo "//pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/:email=npm.registry@enecomanagedcloud.com" >> .npmrc
+      
+      - name: Install dependencies
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.AZURE_ARTIFACTS_TOKEN }}
+      
+      - name: Publish to Azure Artifacts
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.AZURE_ARTIFACTS_TOKEN }}
