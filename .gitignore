@@ -2,7 +2,11 @@
 
 # Dependencies
 node_modules/
+package-lock.json
 yarn.lock
+
+# NPM authentication (keep credentials safe)
+.npmrc
 
 # Test artifacts
 test-schemas/
