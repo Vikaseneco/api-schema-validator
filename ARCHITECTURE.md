@@ -3,7 +3,7 @@
 ## 📦 NPM Package Structure
 
 ```
-@eneco/api-schema-validator/
+bruno-api-schema-validator/
 │
 ├── 📄 package.json                 # NPM package metadata
 ├── 📄 README.md                    # Main documentation (350+ lines)
@@ -37,7 +37,7 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                                                           │
-│              @eneco/api-schema-validator                  │
+│              bruno-api-schema-validator                  │
 │                    (NPM Package)                          │
 │                                                           │
 │  ┌──────────────────────────────────────────────────┐   │
@@ -125,7 +125,7 @@ YOUR PROJECT
 ═══════════════════════════════════════════════════
 
 ├── package.json
-│   └── dependencies: { "@eneco/api-schema-validator": "^1.0.0" }
+│   └── dependencies: { "bruno-api-schema-validator": "^1.0.0" }
 │
 ├── node_modules/
 │   └── @eneco/
@@ -148,7 +148,7 @@ YOUR PROJECT
     ┌──────────────────────────────────────────────┐
     │ tests {                                       │
     │   const SchemaValidator = require(           │
-    │     '@eneco/api-schema-validator'            │
+    │     'bruno-api-schema-validator'            │
     │   );                                          │
     │   const validator = new SchemaValidator(     │
     │     './api-schemas'                          │
@@ -175,7 +175,7 @@ YOUR PROJECT
 // In GetAssets.bru
 tests {
   const jsonData = res.getBody();
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
   test("Schema validation", function(){
@@ -193,7 +193,7 @@ tests {
 
 ```javascript
 // generate-schemas.js
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 const validator = new SchemaValidator('./api-schemas');
 
 async function generateSchemas() {
@@ -212,7 +212,7 @@ generateSchemas();
 ### Pattern 3: Jest/Mocha Unit Tests
 
 ```javascript
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 const validator = new SchemaValidator('./api-schemas');
 
 describe('API Schema Validation', () => {
@@ -228,7 +228,7 @@ describe('API Schema Validation', () => {
 
 ```javascript
 // validate-all-endpoints.js
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 const validator = new SchemaValidator('./api-schemas');
 
 const endpoints = [
@@ -276,7 +276,7 @@ validateAll();
 ```
 Step 1: Install Package
 ═══════════════════════
-$ npm install @eneco/api-schema-validator
+$ npm install bruno-api-schema-validator
 
 
 Step 2: Create Schema Directory
@@ -400,3 +400,4 @@ api-schemas/
 ---
 
 **Ready to get started? See [SETUP_GUIDE.md](./SETUP_GUIDE.md)**
+

@@ -1,8 +1,8 @@
-# @eneco/api-schema-validator
+# bruno-api-schema-validator
 
-> A flexible JSON schema validation library for API testing with automatic schema generation and synchronous/asynchronous validation support.
+> A flexible JSON schema validation library for API testing with automatic schema generation and synchronous/asynchronous validation support. Perfect for Bruno API client and automated testing.
 
-[![npm version](https://img.shields.io/npm/v/@eneco/api-schema-validator.svg)](https://www.npmjs.com/package/@eneco/api-schema-validator)
+[![npm version](https://img.shields.io/npm/v/bruno-api-schema-validator.svg)](https://www.npmjs.com/package/bruno-api-schema-validator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Features
@@ -19,7 +19,7 @@
 ## 📦 Installation
 
 ```bash
-npm install @eneco/api-schema-validator
+npm install bruno-api-schema-validator
 ```
 
 ## 🎯 Quick Start
@@ -27,38 +27,55 @@ npm install @eneco/api-schema-validator
 ### Basic Usage
 
 ```javascript
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 
-// Create validator instance
-const validator = new SchemaValidator('./api-schemas');
+// For Bruno: Super simple - no parameters needed!
+// Automatically uses bru.cwd() and 'api-schemas' folder
+const validator = new SchemaValidator();
 
-// Your API response
+// Your API response from https://jsonplaceholder.typicode.com/users
 const apiResponse = [
-  { name: "Asset-001", id: "123", fullName: "Solar Farm" }
+  {
+    id: 1,
+    name: "Leanne Graham",
+    username: "Bret",
+    email: "Sincere@april.biz",
+    address: {
+      street: "Kulas Light",
+      suite: "Apt. 556",
+      city: "Gwenborough",
+      zipcode: "92998-3874"
+    }
+  }
 ];
 
 // Step 1: Generate schema (one-time)
-await validator.createJsonSchema('vpp/Asset Manager', 'RegisteredAssets', apiResponse);
+await validator.createJsonSchema('jsonplaceholder', 'Users', apiResponse);
 
 // Step 2: Validate responses
-const isValid = validator.validateJsonSchemaSync('vpp/Asset Manager', 'RegisteredAssets', apiResponse);
+const isValid = validator.validateJsonSchemaSync('jsonplaceholder', 'Users', apiResponse);
 console.log(isValid); // true
 ```
 
 ### Bruno API Testing Integration
 
 ```javascript
-// In your .bru file
+// In your .bru file: GetUsers.bru
+// GET https://jsonplaceholder.typicode.com/users
+
 tests {
   const jsonData = res.getBody();
-  const SchemaValidator = require('@eneco/api-schema-validator');
-  const validator = new SchemaValidator('./api-schemas');
+  const SchemaValidator = require('bruno-api-schema-validator');
   
-  test("Valid response JSON schema", function(){
+  // Super simple - auto-detects Bruno environment!
+  const validator = new SchemaValidator();
+  
+  test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
-      'vpp/Asset Manager', 
-      'RegisteredAssets', 
-      jsonData
+      'jsonplaceholder', 
+      'Users', 
+      jsonData,
+      { verbose: true }
     );
     expect(result).to.equal(true);
   });
@@ -66,23 +83,67 @@ tests {
   test("Status code is 200", function () {
     expect(res.getStatus()).to.equal(200);
   });
+  
+  test("Response is an array", function () {
+    expect(jsonData).to.be.an("array");
+  });
 }
 ```
+
+**Folder Structure:**
+
+```
+bruno-collection/
+├── api-schemas/           ← Default folder (auto-detected)
+│   └── jsonplaceholder/
+│       └── Users_schema.json
+└── GetUsers.bru          ← Your test file
+```
+
+> **💡 Pro Tip:** The validator automatically detects Bruno environment and uses `bru.cwd()` internally! No manual path construction needed. Just call `new SchemaValidator()` and you're done!
 
 ## 📚 API Documentation
 
 ### Constructor
 
-#### `new SchemaValidator(schemaBasePath)`
+#### `new SchemaValidator([schemaPathOrFolderName])`
 
-Creates a new validator instance.
+Creates a new validator instance with automatic environment detection.
 
 **Parameters:**
-- `schemaBasePath` (string, optional) - Base directory for schema files. Default: `'./api-schemas'`
 
-**Example:**
+- `schemaPathOrFolderName` (string, optional) - Default: `'api-schemas'`
+  - **In Bruno:** Folder name within your collection (e.g., `'api-schemas'`, `'my-schemas'`)
+  - **In Node.js:** Full path to schema directory (absolute or relative)
+
+**Behavior:**
+
+- **Bruno Environment:** Automatically detects `bru.cwd()` and constructs path
+- **Node.js Environment:** Treats parameter as full directory path
+
+**Examples:**
+
 ```javascript
-const validator = new SchemaValidator('./my-schemas');
+// ========================================
+// BRUNO USAGE (Automatic Detection!)
+// ========================================
+
+// Default: Uses 'api-schemas' folder in your Bruno collection
+const validator = new SchemaValidator();
+
+// Custom folder name in your Bruno collection
+const validator = new SchemaValidator('my-custom-schemas');
+
+// ========================================
+// NODE.JS USAGE
+// ========================================
+
+// Absolute path
+const validator = new SchemaValidator('C:/projects/my-api/api-schemas');
+
+// Relative path with __dirname
+const path = require('path');
+const validator = new SchemaValidator(path.join(__dirname, 'api-schemas'));
 ```
 
 ---
@@ -94,6 +155,7 @@ const validator = new SchemaValidator('./my-schemas');
 Generates a JSON schema from a response and saves it to disk.
 
 **Parameters:**
+
 - `folderName` (string) - Subdirectory path (e.g., `'vpp/Asset Manager'`)
 - `fileName` (string) - Schema file base name (e.g., `'RegisteredAssets'`)
 - `json` (object/array) - JSON data to generate schema from
@@ -101,9 +163,14 @@ Generates a JSON schema from a response and saves it to disk.
 **Returns:** `Promise<string>` - Path to created schema file
 
 **Example:**
+
 ```javascript
-await validator.createJsonSchema('api/v1', 'Users', userApiResponse);
-// Creates: ./api-schemas/api/v1/Users_schema.json
+// Fetch data from JSONPlaceholder API
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
+await validator.createJsonSchema('jsonplaceholder', 'Users', users);
+// Creates: ./api-schemas/jsonplaceholder/Users_schema.json
 ```
 
 ---
@@ -113,6 +180,7 @@ await validator.createJsonSchema('api/v1', 'Users', userApiResponse);
 Synchronously validates data against a schema. **Use this in Bruno tests.**
 
 **Parameters:**
+
 - `folderName` (string) - Subdirectory path
 - `fileName` (string) - Schema file base name
 - `body` (object/array) - Data to validate
@@ -123,11 +191,13 @@ Synchronously validates data against a schema. **Use this in Bruno tests.**
 **Returns:** `boolean` - `true` if valid, `false` otherwise
 
 **Example:**
+
 ```javascript
+// Validate users data from JSONPlaceholder API
 const isValid = validator.validateJsonSchemaSync(
-  'vpp/Asset Manager',
-  'RegisteredAssets',
-  apiResponse,
+  'jsonplaceholder',
+  'Users',
+  usersData,
   { verbose: true, throwOnError: false }
 );
 ```
@@ -139,6 +209,7 @@ const isValid = validator.validateJsonSchemaSync(
 Asynchronously validates data against a schema.
 
 **Parameters:**
+
 - `folderName` (string) - Subdirectory path
 - `fileName` (string) - Schema file base name
 - `body` (object/array) - Data to validate
@@ -150,12 +221,16 @@ Asynchronously validates data against a schema.
 **Returns:** `Promise<boolean>` - `true` if valid, `false` otherwise
 
 **Example:**
+
 ```javascript
-// Validate and create schema if missing
+// Validate users and create schema if missing
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
 const isValid = await validator.validateJsonSchema(
-  'api/v1',
-  'Products',
-  productsResponse,
+  'jsonplaceholder',
+  'Users',
+  users,
   { createSchema: true, verbose: true }
 );
 ```
@@ -167,12 +242,14 @@ const isValid = await validator.validateJsonSchema(
 Check if a schema file exists.
 
 **Parameters:**
+
 - `folderName` (string) - Subdirectory path
 - `fileName` (string) - Schema file base name
 
 **Returns:** `boolean` - `true` if schema exists
 
 **Example:**
+
 ```javascript
 if (validator.schemaExists('api/v1', 'Users')) {
   console.log('Schema exists!');
@@ -186,12 +263,14 @@ if (validator.schemaExists('api/v1', 'Users')) {
 Get the full path to a schema file.
 
 **Parameters:**
+
 - `folderName` (string) - Subdirectory path
 - `fileName` (string) - Schema file base name
 
 **Returns:** `string` - Full path to schema file
 
 **Example:**
+
 ```javascript
 const path = validator.getSchemaPath('api/v1', 'Users');
 console.log(path); // ./api-schemas/api/v1/Users_schema.json
@@ -207,26 +286,19 @@ When you use this package, schemas are organized like this:
 your-project/
 ├── package.json
 ├── node_modules/
-│   └── @eneco/
-│       └── api-schema-validator/
+│   └── bruno-api-schema-validator/
 ├── api-schemas/                        ← Your schemas here
-│   ├── vpp/
-│   │   ├── Asset Manager/
-│   │   │   ├── RegisteredAssets_schema.json
-│   │   │   ├── AssetDetails_schema.json
-│   │   │   └── OperationalConfig_schema.json
-│   │   ├── Asset Schedule/
-│   │   │   ├── Timeseries_schema.json
-│   │   │   └── StrikePrice_schema.json
-│   │   └── TSO/
-│   │       └── Setpoints_schema.json
+│   ├── jsonplaceholder/
+│   │   ├── Users_schema.json
+│   │   ├── Posts_schema.json
+│   │   └── Comments_schema.json
 │   └── api/
 │       └── v1/
-│           ├── Users_schema.json
-│           └── Products_schema.json
+│           ├── Products_schema.json
+│           └── Orders_schema.json
 └── tests/
     └── api/
-        └── assets.test.js
+        └── users.test.js
 ```
 
 ## 🔄 How It Works
@@ -316,49 +388,63 @@ cat api-schemas/api/v1/Users_schema.json
 ### Example 1: First-Time Schema Creation
 
 ```javascript
-const SchemaValidator = require('@eneco/api-schema-validator');
-const validator = new SchemaValidator('./api-schemas');
+const SchemaValidator = require('bruno-api-schema-validator');
 
-// First time: Create schema from a good API response
-const goodResponse = await fetch('https://api.example.com/assets').then(r => r.json());
+// Super clean - no path construction needed!
+const validator = new SchemaValidator();
 
-await validator.createJsonSchema('api/v1', 'Assets', goodResponse);
+// First time: Create schema from JSONPlaceholder API response
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
+await validator.createJsonSchema('jsonplaceholder', 'Users', users);
 console.log('✓ Schema created successfully');
 
 // Now use it in tests
-const isValid = validator.validateJsonSchemaSync('api/v1', 'Assets', goodResponse);
+const isValid = validator.validateJsonSchemaSync('jsonplaceholder', 'Users', users);
 console.log('Validation:', isValid); // true
 ```
 
 ### Example 2: Multiple Endpoints
 
 ```javascript
-const validator = new SchemaValidator('./api-schemas');
+// Auto-detected environment
+const validator = new SchemaValidator();
 
-// Test multiple related endpoints with separate schemas
-test("Assets endpoint schema", () => {
-  expect(validator.validateJsonSchemaSync('api/v1', 'Assets', assetsData)).toBe(true);
+// Test multiple JSONPlaceholder endpoints with separate schemas
+test("Users endpoint schema", async () => {
+  const users = await fetch('https://jsonplaceholder.typicode.com/users').then(r => r.json());
+  expect(validator.validateJsonSchemaSync('jsonplaceholder', 'Users', users)).toBe(true);
 });
 
-test("Users endpoint schema", () => {
-  expect(validator.validateJsonSchemaSync('api/v1', 'Users', usersData)).toBe(true);
+test("Posts endpoint schema", async () => {
+  const posts = await fetch('https://jsonplaceholder.typicode.com/posts').then(r => r.json());
+  expect(validator.validateJsonSchemaSync('jsonplaceholder', 'Posts', posts)).toBe(true);
 });
 
-test("Orders endpoint schema", () => {
-  expect(validator.validateJsonSchemaSync('api/v1', 'Orders', ordersData)).toBe(true);
+test("Comments endpoint schema", async () => {
+  const comments = await fetch('https://jsonplaceholder.typicode.com/comments').then(r => r.json());
+  expect(validator.validateJsonSchemaSync('jsonplaceholder', 'Comments', comments)).toBe(true);
 });
 ```
 
 ### Example 3: Custom Error Handling
 
 ```javascript
+// One line initialization
+const validator = new SchemaValidator();
+
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
 try {
   const isValid = validator.validateJsonSchemaSync(
-    'api/v1',
+    'jsonplaceholder',
     'Users',
-    userData,
+    users,
     { verbose: true, throwOnError: true }
   );
+  console.log('✓ Validation passed');
 } catch (error) {
   console.error('Validation failed:', error.message);
   // Send alert, log to monitoring system, etc.
@@ -369,15 +455,20 @@ try {
 ### Example 4: Conditional Schema Creation
 
 ```javascript
-const validator = new SchemaValidator('./api-schemas');
+// Clean and simple
+const validator = new SchemaValidator();
+
+// Fetch users from JSONPlaceholder
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
 
 // Create schema only if it doesn't exist
-if (!validator.schemaExists('api/v1', 'NewEndpoint')) {
-  await validator.createJsonSchema('api/v1', 'NewEndpoint', apiResponse);
-  console.log('New schema created');
+if (!validator.schemaExists('jsonplaceholder', 'Users')) {
+  await validator.createJsonSchema('jsonplaceholder', 'Users', users);
+  console.log('✓ New schema created for Users endpoint');
 } else {
   console.log('Schema already exists, validating...');
-  const isValid = validator.validateJsonSchemaSync('api/v1', 'NewEndpoint', apiResponse);
+  const isValid = validator.validateJsonSchemaSync('jsonplaceholder', 'Users', users);
   console.log('Valid:', isValid);
 }
 ```
@@ -385,30 +476,36 @@ if (!validator.schemaExists('api/v1', 'NewEndpoint')) {
 ### Example 5: Bruno - Complete Integration
 
 ```javascript
-// File: GetRegisteredAssets.bru
+// File: GetUsers.bru
 
 meta {
-  name: GetRegisteredAssets_Automatic
+  name: Get Users
   type: http
   seq: 1
 }
 
 get {
-  url: {{AssetURL}}/v1/Asset/GetRegisteredAssets?steeringMode=Automatic
+  url: https://jsonplaceholder.typicode.com/users
   body: none
-  auth: inherit
+  auth: none
+}
+
+docs {
+  This request retrieves a list of users from the JSONPlaceholder API.
 }
 
 tests {
   const jsonData = res.getBody();
-  const SchemaValidator = require('@eneco/api-schema-validator');
-  const validator = new SchemaValidator('./api-schemas');
+  const SchemaValidator = require('bruno-api-schema-validator');
+  
+  // One line - that's it!
+  const validator = new SchemaValidator();
   
   // Schema validation test
-  test("Valid response JSON schema - Asset Registered", function(){
+  test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
-      'vpp/Asset Manager',
-      'Automatic_RegisteredAssets',
+      'jsonplaceholder',
+      'Users',
       jsonData,
       { verbose: true }
     );
@@ -424,8 +521,14 @@ tests {
     expect(jsonData).to.be.an("array");
   });
   
-  test("At least one asset returned", function () {
+  test("At least one user returned", function () {
     expect(jsonData.length).to.be.greaterThan(0);
+  });
+  
+  test("First user has required fields", function () {
+    expect(jsonData[0]).to.have.property('id');
+    expect(jsonData[0]).to.have.property('name');
+    expect(jsonData[0]).to.have.property('email');
   });
 }
 ```
@@ -435,16 +538,21 @@ tests {
 ### Issue: Schema file not found (ENOENT)
 
 **Error:**
+
 ```
 Error loading or validating schema file: ENOENT: no such file or directory
 ```
 
 **Solution:**
+
 1. Ensure schema was created first:
+
    ```javascript
    await validator.createJsonSchema('api/v1', 'Users', sampleResponse);
    ```
+
 2. Verify the schema path:
+
    ```javascript
    console.log(validator.getSchemaPath('api/v1', 'Users'));
    ```
@@ -452,6 +560,7 @@ Error loading or validating schema file: ENOENT: no such file or directory
 ### Issue: Validation fails unexpectedly
 
 **Check the console output for detailed errors:**
+
 ```
 ✗ SCHEMA VALIDATION ERRORS:
   Schema: api/v1/Users
@@ -469,6 +578,7 @@ Error loading or validating schema file: ENOENT: no such file or directory
 **Problem:** Schema doesn't allow `null` values or optional fields.
 
 **Solution:** Manually edit the schema file:
+
 ```json
 {
   "properties": {
@@ -497,6 +607,7 @@ test("Check all properties", () => {
 ```
 
 **Issues:**
+
 - 🔴 Verbose and repetitive
 - 🔴 Doesn't catch unexpected fields
 - 🔴 Hard to maintain
@@ -512,6 +623,7 @@ test("Schema validation", function(){
 ```
 
 **Benefits:**
+
 - ✅ One line of code
 - ✅ Comprehensive validation
 - ✅ Catches all structural changes
@@ -519,7 +631,7 @@ test("Schema validation", function(){
 
 ## 🚀 Getting Started Checklist
 
-- [ ] Install package: `npm install @eneco/api-schema-validator`
+- [ ] Install package: `npm install bruno-api-schema-validator`
 - [ ] Create validator instance in your tests
 - [ ] Generate schemas from good API responses
 - [ ] Add schema validation tests to critical endpoints
@@ -543,12 +655,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-MIT © Eneco VPP Testing Team
+MIT © Happy Testing!!
 
 ## 🔗 Links
 
 - [GitHub Repository](https://github.com/eneco/api-schema-validator)
-- [NPM Package](https://www.npmjs.com/package/@eneco/api-schema-validator)
+- [NPM Package](https://www.npmjs.com/package/bruno-api-schema-validator)
 - [JSON Schema Specification](https://json-schema.org/)
 - [AJV Validator](https://ajv.js.org/)
 - [Bruno API Client](https://www.usebruno.com/)
@@ -556,9 +668,10 @@ MIT © Eneco VPP Testing Team
 ## 📞 Support
 
 For issues, questions, or suggestions:
+
 - Open an issue on GitHub
-- Contact: vpp-testing-team@eneco.com
+- Contact: <vikas.yadav@eneco.com>
 
 ---
 
-**Made with ❤️ by the Eneco VPP Testing Team**
+**Made with ❤️ by Vikas**

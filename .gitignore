@@ -1,8 +1,7 @@
-# .gitignore for @eneco/api-schema-validator
+# .gitignore for bruno-api-schema-validator
 
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
 # NPM authentication (keep credentials safe)
