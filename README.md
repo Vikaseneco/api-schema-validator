@@ -29,10 +29,9 @@ npm install bruno-api-schema-validator
 ```javascript
 const SchemaValidator = require('bruno-api-schema-validator');
 
-// For Bruno: Get collection path and construct schema path
-const collectionPath = bru.cwd();
-const schemaPath = `${collectionPath}/api-schemas`;
-const validator = new SchemaValidator(schemaPath);
+// For Bruno: Super simple - no parameters needed!
+// Automatically uses bru.cwd() and 'api-schemas' folder
+const validator = new SchemaValidator();
 
 // Your API response from https://jsonplaceholder.typicode.com/users
 const apiResponse = [
@@ -68,10 +67,8 @@ tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Use bru.cwd() to get Bruno collection path
-  const collectionPath = bru.cwd();
-  const schemaPath = `${collectionPath}/api-schemas`;
-  const validator = new SchemaValidator(schemaPath);
+  // Super simple - auto-detects Bruno environment!
+  const validator = new SchemaValidator();
   
   test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
@@ -97,38 +94,54 @@ tests {
 
 ```
 bruno-collection/
-├── api-schemas/           ← Store schemas here
+├── api-schemas/           ← Default folder (auto-detected)
 │   └── jsonplaceholder/
 │       └── Users_schema.json
 └── GetUsers.bru          ← Your test file
 ```
 
-> **💡 Pro Tip:** Using `bru.cwd()` automatically resolves the path to your Bruno collection folder, so schemas are stored with your tests and can be version controlled together.
+> **💡 Pro Tip:** The validator automatically detects Bruno environment and uses `bru.cwd()` internally! No manual path construction needed. Just call `new SchemaValidator()` and you're done!
 
 ## 📚 API Documentation
 
 ### Constructor
 
-#### `new SchemaValidator(schemaBasePath)`
+#### `new SchemaValidator([schemaPathOrFolderName])`
 
-Creates a new validator instance.
+Creates a new validator instance with automatic environment detection.
 
 **Parameters:**
 
-- `schemaBasePath` (string, **required**) - Path to your schema directory (absolute or relative)
+- `schemaPathOrFolderName` (string, optional) - Default: `'api-schemas'`
+  - **In Bruno:** Folder name within your collection (e.g., `'api-schemas'`, `'my-schemas'`)
+  - **In Node.js:** Full path to schema directory (absolute or relative)
 
-**Example:**
+**Behavior:**
+
+- **Bruno Environment:** Automatically detects `bru.cwd()` and constructs path
+- **Node.js Environment:** Treats parameter as full directory path
+
+**Examples:**
 
 ```javascript
-// For Bruno: Use bru.cwd() to get collection path
-const collectionPath = bru.cwd();
-const schemaPath = `${collectionPath}/api-schemas`;
-const validator = new SchemaValidator(schemaPath);
+// ========================================
+// BRUNO USAGE (Automatic Detection!)
+// ========================================
 
-// For Node.js: Use absolute path
+// Default: Uses 'api-schemas' folder in your Bruno collection
+const validator = new SchemaValidator();
+
+// Custom folder name in your Bruno collection
+const validator = new SchemaValidator('my-custom-schemas');
+
+// ========================================
+// NODE.JS USAGE
+// ========================================
+
+// Absolute path
 const validator = new SchemaValidator('C:/projects/my-api/api-schemas');
 
-// For Node.js: Use relative path with __dirname
+// Relative path with __dirname
 const path = require('path');
 const validator = new SchemaValidator(path.join(__dirname, 'api-schemas'));
 ```
@@ -377,10 +390,8 @@ cat api-schemas/api/v1/Users_schema.json
 ```javascript
 const SchemaValidator = require('bruno-api-schema-validator');
 
-// Get Bruno collection path and construct schema path
-const collectionPath = bru.cwd();
-const schemaPath = `${collectionPath}/api-schemas`;
-const validator = new SchemaValidator(schemaPath);
+// Super clean - no path construction needed!
+const validator = new SchemaValidator();
 
 // First time: Create schema from JSONPlaceholder API response
 const response = await fetch('https://jsonplaceholder.typicode.com/users');
@@ -397,10 +408,8 @@ console.log('Validation:', isValid); // true
 ### Example 2: Multiple Endpoints
 
 ```javascript
-// Get Bruno collection path and construct schema path
-const collectionPath = bru.cwd();
-const schemaPath = `${collectionPath}/api-schemas`;
-const validator = new SchemaValidator(schemaPath);
+// Auto-detected environment
+const validator = new SchemaValidator();
 
 // Test multiple JSONPlaceholder endpoints with separate schemas
 test("Users endpoint schema", async () => {
@@ -422,10 +431,8 @@ test("Comments endpoint schema", async () => {
 ### Example 3: Custom Error Handling
 
 ```javascript
-// Get Bruno collection path and construct schema path
-const collectionPath = bru.cwd();
-const schemaPath = `${collectionPath}/api-schemas`;
-const validator = new SchemaValidator(schemaPath);
+// One line initialization
+const validator = new SchemaValidator();
 
 const response = await fetch('https://jsonplaceholder.typicode.com/users');
 const users = await response.json();
@@ -448,10 +455,8 @@ try {
 ### Example 4: Conditional Schema Creation
 
 ```javascript
-// Get Bruno collection path and construct schema path
-const collectionPath = bru.cwd();
-const schemaPath = `${collectionPath}/api-schemas`;
-const validator = new SchemaValidator(schemaPath);
+// Clean and simple
+const validator = new SchemaValidator();
 
 // Fetch users from JSONPlaceholder
 const response = await fetch('https://jsonplaceholder.typicode.com/users');
@@ -493,10 +498,8 @@ tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Get Bruno collection path and construct schema path
-  const collectionPath = bru.cwd();
-  const schemaPath = `${collectionPath}/api-schemas`;
-  const validator = new SchemaValidator(schemaPath);
+  // One line - that's it!
+  const validator = new SchemaValidator();
   
   // Schema validation test
   test("Valid response JSON schema - Users", function(){

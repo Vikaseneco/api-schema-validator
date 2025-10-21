@@ -37,11 +37,9 @@ docs {
 tests {
   const jsonData = res.getBody();
   
-  // RECOMMENDED: Use bru.cwd() to construct path to schemas in your collection
+  // SUPER SIMPLE: Auto-detects Bruno environment!
   const SchemaValidator = require('bruno-api-schema-validator');
-  const collectionPath = bru.cwd();
-  const schemaPath = `${collectionPath}/api-schemas`;
-  const validator = new SchemaValidator(schemaPath);
+  const validator = new SchemaValidator();
   
   test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
@@ -97,11 +95,8 @@ tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Get Bruno collection path and construct schema path
-  const collectionPath = bru.cwd();
-  console.log('Collection path:', collectionPath);
-  const schemaPath = `${collectionPath}/api-schemas`;
-  const validator = new SchemaValidator(schemaPath);
+  // One line - automatic!
+  const validator = new SchemaValidator();
   
   test("Create schema from response", async function(){
     // First time: create schema from the API response
@@ -142,10 +137,8 @@ tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Use bru.cwd() to construct path
-  const collectionPath = bru.cwd();
-  const schemaPath = `${collectionPath}/api-schemas`;
-  const validator = new SchemaValidator(schemaPath);
+  // Simple initialization
+  const validator = new SchemaValidator();
   
   test("Schema validation with custom options", function(){
     const result = validator.validateJsonSchemaSync(
@@ -195,10 +188,8 @@ get {
 tests {
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Use bru.cwd() to construct path
-  const collectionPath = bru.cwd();
-  const schemaPath = `${collectionPath}/api-schemas`;
-  const validator = new SchemaValidator(schemaPath);
+  // Auto-detected
+  const validator = new SchemaValidator();
   
   // Test Posts endpoint
   test("Validate Posts schema", function(){
