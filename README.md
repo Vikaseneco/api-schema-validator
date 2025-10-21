@@ -65,7 +65,9 @@ console.log(isValid); // true
 tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
-  const validator = new SchemaValidator('./api-schemas');
+  
+  // RECOMMENDED: Use forBruno() - automatically resolves path to your collection
+  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
   
   test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
@@ -87,6 +89,8 @@ tests {
 }
 ```
 
+> **💡 Pro Tip:** The `forBruno(bru, 'api-schemas')` method automatically resolves the schema path relative to your Bruno collection directory. This ensures schemas are loaded from your collection folder, not Bruno's installation folder.
+
 ## 📚 API Documentation
 
 ### Constructor
@@ -98,12 +102,45 @@ Creates a new validator instance.
 **Parameters:**
 
 - `schemaBasePath` (string, optional) - Base directory for schema files. Default: `'./api-schemas'`
+  - Can be relative (resolved from `process.cwd()`) or absolute path
 
 **Example:**
 
 ```javascript
 const validator = new SchemaValidator('./my-schemas');
 ```
+
+---
+
+### Static Methods
+
+#### `SchemaValidator.forBruno(bru, schemaFolder)`
+
+Creates a validator instance specifically for Bruno API testing. This is the **recommended** way to use the package in Bruno.
+
+**Parameters:**
+
+- `bru` (object) - The Bruno context object (available in all `.bru` test files)
+- `schemaFolder` (string, optional) - Name of the schema folder relative to collection root. Default: `'api-schemas'`
+
+**Returns:** `SchemaValidator` - A new validator instance with the correct path
+
+**Example:**
+
+```javascript
+// In your .bru test file
+tests {
+  const SchemaValidator = require('bruno-api-schema-validator');
+  
+  // Automatically finds schemas in: <collection-root>/api-schemas/
+  const validator = SchemaValidator.forBruno(bru);
+  
+  // Or specify a custom folder
+  const validator2 = SchemaValidator.forBruno(bru, 'my-schemas');
+}
+```
+
+**Why use this?** Bruno runs from its installation directory, not your collection directory. The `forBruno()` method uses `bru.cwd()` to automatically resolve the correct path to your collection's schema folder.
 
 ---
 

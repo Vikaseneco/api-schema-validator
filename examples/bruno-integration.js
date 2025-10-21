@@ -5,7 +5,7 @@
  */
 
 // ========================================
-// EXAMPLE 1: Basic Bruno Test Integration
+// EXAMPLE 1: Basic Bruno Test Integration (RECOMMENDED)
 // ========================================
 
 /*
@@ -30,11 +30,10 @@ docs {
 tests {
   const jsonData = res.getBody();
   
-  // Import the validator
+  // RECOMMENDED: Use forBruno() helper method
+  // This automatically resolves the path relative to your Bruno collection
   const SchemaValidator = require('bruno-api-schema-validator');
-  
-  // Create validator instance pointing to your schema directory
-  const validator = new SchemaValidator('./api-schemas');
+  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
   
   test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
@@ -58,6 +57,34 @@ tests {
     expect(jsonData[0]).to.have.property('id');
     expect(jsonData[0]).to.have.property('name');
     expect(jsonData[0]).to.have.property('email');
+  });
+}
+*/
+
+// ========================================
+// EXAMPLE 1B: Alternative Bruno Integration (Manual Path)
+// ========================================
+
+/*
+File: GetUsers_ManualPath.bru
+
+tests {
+  const jsonData = res.getBody();
+  
+  // ALTERNATIVE: Manually construct the absolute path
+  const SchemaValidator = require('bruno-api-schema-validator');
+  const path = require('path');
+  const schemaPath = path.join(bru.cwd(), 'api-schemas');
+  const validator = new SchemaValidator(schemaPath);
+  
+  test("Valid response JSON schema - Users", function(){
+    const result = validator.validateJsonSchemaSync(
+      'jsonplaceholder', 
+      'Users', 
+      jsonData,
+      { verbose: true }
+    );
+    expect(result).to.equal(true);
   });
 }
 */
@@ -88,7 +115,9 @@ docs {
 tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
-  const validator = new SchemaValidator('./api-schemas');
+  
+  // Use forBruno() for automatic path resolution
+  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
   
   test("Create schema from response", async function(){
     // First time: create schema from the API response
@@ -97,7 +126,7 @@ tests {
       'Users',
       jsonData
     );
-    console.log('Schema created at:', schemaPath);
+    console.log('✓ Schema created at:', schemaPath);
   });
   
   // After creating schema, use the regular validation test from Example 1
@@ -126,7 +155,9 @@ get {
 tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
-  const validator = new SchemaValidator('./api-schemas');
+  
+  // Use forBruno() for automatic path resolution
+  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
   
   test("Schema validation with custom options", function(){
     const result = validator.validateJsonSchemaSync(
@@ -175,7 +206,9 @@ get {
 
 tests {
   const SchemaValidator = require('bruno-api-schema-validator');
-  const validator = new SchemaValidator('./api-schemas');
+  
+  // Use forBruno() for automatic path resolution
+  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
   
   // Test Posts endpoint
   test("Validate Posts schema", function(){
