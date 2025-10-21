@@ -29,8 +29,10 @@ npm install bruno-api-schema-validator
 ```javascript
 const SchemaValidator = require('bruno-api-schema-validator');
 
-// Create validator instance
-const validator = new SchemaValidator('./api-schemas');
+// For Bruno: Get collection path and construct schema path
+const collectionPath = bru.cwd();
+const schemaPath = `${collectionPath}/api-schemas`;
+const validator = new SchemaValidator(schemaPath);
 
 // Your API response from https://jsonplaceholder.typicode.com/users
 const apiResponse = [
@@ -92,6 +94,7 @@ tests {
 ```
 
 **Folder Structure:**
+
 ```
 bruno-collection/
 ├── api-schemas/           ← Store schemas here
@@ -373,7 +376,11 @@ cat api-schemas/api/v1/Users_schema.json
 
 ```javascript
 const SchemaValidator = require('bruno-api-schema-validator');
-const validator = new SchemaValidator('./api-schemas');
+
+// Get Bruno collection path and construct schema path
+const collectionPath = bru.cwd();
+const schemaPath = `${collectionPath}/api-schemas`;
+const validator = new SchemaValidator(schemaPath);
 
 // First time: Create schema from JSONPlaceholder API response
 const response = await fetch('https://jsonplaceholder.typicode.com/users');
@@ -390,7 +397,10 @@ console.log('Validation:', isValid); // true
 ### Example 2: Multiple Endpoints
 
 ```javascript
-const validator = new SchemaValidator('./api-schemas');
+// Get Bruno collection path and construct schema path
+const collectionPath = bru.cwd();
+const schemaPath = `${collectionPath}/api-schemas`;
+const validator = new SchemaValidator(schemaPath);
 
 // Test multiple JSONPlaceholder endpoints with separate schemas
 test("Users endpoint schema", async () => {
@@ -412,6 +422,11 @@ test("Comments endpoint schema", async () => {
 ### Example 3: Custom Error Handling
 
 ```javascript
+// Get Bruno collection path and construct schema path
+const collectionPath = bru.cwd();
+const schemaPath = `${collectionPath}/api-schemas`;
+const validator = new SchemaValidator(schemaPath);
+
 const response = await fetch('https://jsonplaceholder.typicode.com/users');
 const users = await response.json();
 
@@ -433,7 +448,10 @@ try {
 ### Example 4: Conditional Schema Creation
 
 ```javascript
-const validator = new SchemaValidator('./api-schemas');
+// Get Bruno collection path and construct schema path
+const collectionPath = bru.cwd();
+const schemaPath = `${collectionPath}/api-schemas`;
+const validator = new SchemaValidator(schemaPath);
 
 // Fetch users from JSONPlaceholder
 const response = await fetch('https://jsonplaceholder.typicode.com/users');
@@ -474,7 +492,11 @@ docs {
 tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
-  const validator = new SchemaValidator('./api-schemas');
+  
+  // Get Bruno collection path and construct schema path
+  const collectionPath = bru.cwd();
+  const schemaPath = `${collectionPath}/api-schemas`;
+  const validator = new SchemaValidator(schemaPath);
   
   // Schema validation test
   test("Valid response JSON schema - Users", function(){
@@ -630,7 +652,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-MIT © Eneco VPP Testing Team
+MIT © Happy Testing!!
 
 ## 🔗 Links
 
@@ -649,5 +671,4 @@ For issues, questions, or suggestions:
 
 ---
 
-**Made with ❤️ by the Eneco VPP Core Team**
-
+**Made with ❤️ by Vikas**
