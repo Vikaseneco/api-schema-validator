@@ -245,26 +245,19 @@ When you use this package, schemas are organized like this:
 your-project/
 ├── package.json
 ├── node_modules/
-│   └── @eneco/
-│       └── api-schema-validator/
+│   └── bruno-api-schema-validator/
 ├── api-schemas/                        ← Your schemas here
-│   ├── vpp/
-│   │   ├── Asset Manager/
-│   │   │   ├── RegisteredAssets_schema.json
-│   │   │   ├── AssetDetails_schema.json
-│   │   │   └── OperationalConfig_schema.json
-│   │   ├── Asset Schedule/
-│   │   │   ├── Timeseries_schema.json
-│   │   │   └── StrikePrice_schema.json
-│   │   └── TSO/
-│   │       └── Setpoints_schema.json
+│   ├── jsonplaceholder/
+│   │   ├── Users_schema.json
+│   │   ├── Posts_schema.json
+│   │   └── Comments_schema.json
 │   └── api/
 │       └── v1/
-│           ├── Users_schema.json
-│           └── Products_schema.json
+│           ├── Products_schema.json
+│           └── Orders_schema.json
 └── tests/
     └── api/
-        └── assets.test.js
+        └── users.test.js
 ```
 
 ## 🔄 How It Works
@@ -588,7 +581,7 @@ test("Schema validation", function(){
 
 ## 🚀 Getting Started Checklist
 
-- [ ] Install package: `npm install @bruno-api-schema-validator`
+- [ ] Install package: `npm install bruno-api-schema-validator`
 - [ ] Create validator instance in your tests
 - [ ] Generate schemas from good API responses
 - [ ] Add schema validation tests to critical endpoints

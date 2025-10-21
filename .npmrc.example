@@ -1,5 +1,0 @@
-# Example .npmrc for publishing to Azure Artifacts
-# Copy this file to .npmrc and authenticate using: vsts-npm-auth -config .npmrc
-
-registry=https://pkgs.dev.azure.com/enecomanagedcloud/a7ef9a24-213c-4c4c-85f4-c20a7db60c43/_packaging/vpp-npm-feed/npm/registry/
-always-auth=true
