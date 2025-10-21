@@ -1,6 +1,6 @@
 # Publishing to Azure Artifacts - Setup Guide
 
-This guide explains how to set up and publish the `@eneco/api-schema-validator` package to Azure Artifacts.
+This guide explains how to set up and publish the `bruno-api-schema-validator` package to Azure Artifacts.
 
 ## 🔧 Prerequisites
 
@@ -148,7 +148,7 @@ The GitHub Actions pipeline will automatically publish the new version.
 
 After publishing, you can verify the package at:
 
-https://dev.azure.com/enecomanagedcloud/Myriad%20-%20VPP/_artifacts/feed/vpp-npm-feed/npm/@eneco/api-schema-validator
+https://dev.azure.com/enecomanagedcloud/Myriad%20-%20VPP/_artifacts/feed/vpp-npm-feed/npm/bruno-api-schema-validator
 
 ## 📥 Installing from Azure Artifacts
 
@@ -167,7 +167,7 @@ In other projects, to install this package:
 
 3. Install the package:
    ```bash
-   npm install @eneco/api-schema-validator
+   npm install bruno-api-schema-validator
    ```
 
 ## 🛠️ Troubleshooting
@@ -199,3 +199,4 @@ For issues with:
 ---
 
 **Happy Publishing! 🎉**
+

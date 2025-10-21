@@ -1,24 +1,30 @@
 {
-  "name": "@eneco/api-schema-validator",
+  "name": "bruno-api-schema-validator",
   "version": "1.0.1",
-  "description": "A flexible JSON schema validation library for API testing with automatic schema generation and synchronous/asynchronous validation support",
+  "description": "A flexible JSON schema validation library for API testing with automatic schema generation and synchronous/asynchronous validation support. Perfect for Bruno API client and automated testing.",
   "main": "lib/index.js",
   "scripts": {
     "test": "node test/test.js",
     "example": "node examples/basic-usage.js"
   },
   "keywords": [
+    "bruno",
+    "bruno-api",
     "json-schema",
     "validation",
     "api-testing",
     "schema-validation",
     "contract-testing",
-    "bruno",
     "api",
-    "testing"
+    "testing",
+    "schema-generator",
+    "api-validator"
   ],
-  "author": "Eneco VPP Testing Team",
+  "author": "Vikas Yadav <vikas.yadav@eneco.com>",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "ajv": "^8.12.0",
     "generate-schema": "^2.6.0"

@@ -1,5 +1,5 @@
 /**
- * Example: Basic usage of @eneco/api-schema-validator
+ * Example: Basic usage of bruno-api-schema-validator
  * This example shows how to create and validate schemas
  */
 
@@ -31,7 +31,7 @@ const apiResponse = [
 ];
 
 async function main() {
-  console.log('=== @eneco/api-schema-validator - Basic Usage Example ===\n');
+  console.log('=== bruno-api-schema-validator - Basic Usage Example ===\n');
 
   // Step 1: Create a schema from the API response
   console.log('Step 1: Creating schema from API response...');
@@ -69,3 +69,4 @@ async function main() {
 }
 
 main().catch(console.error);
+

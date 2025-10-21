@@ -1,5 +1,5 @@
 /**
- * Example: Using @eneco/api-schema-validator in Bruno API tests
+ * Example: Using bruno-api-schema-validator in Bruno API tests
  * 
  * This shows how to integrate the package in your Bruno .bru files
  */
@@ -27,7 +27,7 @@ tests {
   const jsonData = res.getBody();
   
   // Import the validator
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   
   // Create validator instance pointing to your schema directory
   const validator = new SchemaValidator('./api-schemas');
@@ -73,7 +73,7 @@ get {
 
 tests {
   const jsonData = res.getBody();
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
   test("Create schema from response", async function(){
@@ -99,7 +99,7 @@ File: GetAssets_Advanced.bru
 
 tests {
   const jsonData = res.getBody();
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
   test("Schema validation with custom options", function(){
@@ -136,7 +136,7 @@ tests {
 File: MultipleEndpoints.bru
 
 tests {
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
   // Test Assets endpoint
@@ -156,7 +156,7 @@ tests {
 // EXAMPLE 5: Using in Node.js Test Scripts
 // ========================================
 
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 const assert = require('assert');
 
 async function testAPIWithSchemaValidation() {
@@ -175,3 +175,4 @@ async function testAPIWithSchemaValidation() {
 // testAPIWithSchemaValidation().catch(console.error);
 
 console.log('Bruno integration examples loaded. Copy the examples above into your .bru files.');
+

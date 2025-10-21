@@ -6,7 +6,7 @@
 const SchemaValidator = require('../lib/index');
 const path = require('path');
 
-console.log('=== @eneco/api-schema-validator - Integration Example ===\n');
+console.log('=== bruno-api-schema-validator - Integration Example ===\n');
 
 console.log('📁 FOLDER STRUCTURE AFTER INSTALLATION:\n');
 
@@ -38,11 +38,11 @@ console.log(`your-project/
 console.log('\n📝 USAGE IN YOUR PROJECT:\n');
 
 console.log('1. Install the package:');
-console.log('   npm install @eneco/api-schema-validator\n');
+console.log('   npm install bruno-api-schema-validator\n');
 
 console.log('2. Use in your tests:');
 console.log(`
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 const validator = new SchemaValidator('./api-schemas');
 
 // In Bruno tests
@@ -142,3 +142,4 @@ validator.createJsonSchema('demo', 'SampleAsset', sampleData)
     console.log('  - README.md');
   })
   .catch(console.error);
+

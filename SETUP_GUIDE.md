@@ -1,4 +1,4 @@
-# @eneco/api-schema-validator - Complete Setup Guide
+# bruno-api-schema-validator - Complete Setup Guide
 
 ## 📦 Package Structure
 
@@ -24,7 +24,7 @@ api-schema-validator/
 
 ```bash
 cd your-project
-npm install @eneco/api-schema-validator
+npm install bruno-api-schema-validator
 ```
 
 ### 2. Folder Structure After Installation
@@ -44,7 +44,7 @@ your-project/
 ### 3. First-Time Usage: Create a Schema
 
 ```javascript
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 const validator = new SchemaValidator('./api-schemas');
 
 // Your API response
@@ -74,7 +74,7 @@ api-schemas/
 // In your .bru file
 tests {
   const jsonData = res.getBody();
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
   test("Valid response JSON schema", function(){
@@ -96,7 +96,7 @@ tests {
 ```bash
 cd VPP-Core
 npm init -y  # If package.json doesn't exist
-npm install @eneco/api-schema-validator
+npm install bruno-api-schema-validator
 ```
 
 #### Step 2: Create Schema Directory
@@ -109,7 +109,7 @@ mkdir api-schemas
 Create a one-time script `generate-schemas.js`:
 
 ```javascript
-const SchemaValidator = require('@eneco/api-schema-validator');
+const SchemaValidator = require('bruno-api-schema-validator');
 const validator = new SchemaValidator('./api-schemas');
 
 // Sample responses (copy from actual API calls)
@@ -158,7 +158,7 @@ tests {
 ```javascript
 tests {
   var jsonData = res.getBody();
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
   test("Valid response JSON schema", function(){
@@ -214,7 +214,7 @@ tests {
   var jsonData = res.getBody();
   
   // Import schema validator
-  const SchemaValidator = require('@eneco/api-schema-validator');
+  const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
   // 1. Schema validation (replaces dozens of manual checks)
@@ -255,7 +255,7 @@ tests {
 
 ```
 VPP-Core/
-├── package.json                           # Contains @eneco/api-schema-validator
+├── package.json                           # Contains bruno-api-schema-validator
 ├── node_modules/
 │   └── @eneco/
 │       └── api-schema-validator/
@@ -340,7 +340,7 @@ npm publish --access public
 
 ### Install in Other Projects
 ```bash
-npm install @eneco/api-schema-validator
+npm install bruno-api-schema-validator
 ```
 
 ## 🎓 Learning Path
@@ -364,8 +364,8 @@ npm install @eneco/api-schema-validator
 
 ## 🐛 Common Issues
 
-### Issue: "Cannot find module '@eneco/api-schema-validator'"
-**Solution:** Install the package: `npm install @eneco/api-schema-validator`
+### Issue: "Cannot find module 'bruno-api-schema-validator'"
+**Solution:** Install the package: `npm install bruno-api-schema-validator`
 
 ### Issue: "Schema file not found"
 **Solution:** Generate the schema first using `createJsonSchema()`
@@ -384,7 +384,7 @@ npm install @eneco/api-schema-validator
 
 ## ✅ Checklist for Success
 
-- [ ] Package installed: `npm install @eneco/api-schema-validator`
+- [ ] Package installed: `npm install bruno-api-schema-validator`
 - [ ] Schema directory created: `./api-schemas/`
 - [ ] Generated schemas for key endpoints
 - [ ] Updated at least one .bru file to use package
@@ -396,3 +396,4 @@ npm install @eneco/api-schema-validator
 ---
 
 **Happy Testing! 🎉**
+
