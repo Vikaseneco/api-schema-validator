@@ -1,6 +1,6 @@
 {
   "name": "bruno-api-schema-validator",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "A flexible JSON schema validation library for API testing with automatic schema generation and synchronous/asynchronous validation support. Perfect for Bruno API client and automated testing.",
   "main": "lib/index.js",
   "scripts": {
