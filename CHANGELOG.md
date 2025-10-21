@@ -8,21 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.1] - 2025-10-20
 
 ### Added
+
 - GitHub Actions CI/CD pipeline for automated publishing to Azure Artifacts
 - `.npmrc.example` template for Azure Artifacts configuration
 - `PUBLISHING.md` comprehensive guide for publishing to Azure Artifacts
 - Automated build and test workflow on pull requests
 
 ### Fixed
+
 - Corrected repository URL format in package.json
 - Added `.npmrc` to `.gitignore` for security
 
 ### Changed
+
 - Updated `.gitignore` to exclude npm authentication files
 
 ## [1.0.0] - 2025-10-20
 
 ### Added
+
 - Initial release of @eneco/api-schema-validator
 - `SchemaValidator` class for JSON schema validation
 - Automatic schema generation from API responses

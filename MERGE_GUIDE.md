@@ -12,7 +12,7 @@
 
 ### 1. Create Pull Request on GitHub
 
-Go to: https://github.com/Vikaseneco/api-schema-validator/pulls
+Go to: <https://github.com/Vikaseneco/api-schema-validator/pulls>
 
 Click **"New Pull Request"** or **"Compare & pull request"** if available
 
@@ -20,6 +20,7 @@ Click **"New Pull Request"** or **"Compare & pull request"** if available
 - **Compare branch:** `feature/test_lib`
 - **Title:** `Release v1.0.1 - Add CI/CD pipeline and fix package.json`
 - **Description:**
+
   ```markdown
   ## Changes in v1.0.1
   
@@ -76,15 +77,16 @@ Once merged to `main`, the GitHub Actions workflow will:
 
 After the workflow completes:
 
-1. Go to GitHub Actions: https://github.com/Vikaseneco/api-schema-validator/actions
+1. Go to GitHub Actions: <https://github.com/Vikaseneco/api-schema-validator/actions>
 2. Check that the "Build and Publish to Azure Artifacts" workflow succeeded
 3. Verify in Azure Artifacts:
-   - URL: https://dev.azure.com/enecomanagedcloud/Myriad%20-%20VPP/_artifacts/feed/vpp-npm-feed
+   - URL: <https://dev.azure.com/enecomanagedcloud/Myriad%20-%20VPP/_artifacts/feed/vpp-npm-feed>
    - Look for: `@eneco/api-schema-validator@1.0.1`
 
 ## 📦 What Gets Published
 
 The package will include:
+
 - ✅ All source code (`lib/index.js`)
 - ✅ Documentation (README.md, SETUP_GUIDE.md, etc.)
 - ✅ Examples (`examples/`)
@@ -113,6 +115,7 @@ Updated:
 ## ⚠️ Important Prerequisites
 
 Before merging, ensure:
+
 - ✅ `AZURE_ARTIFACTS_TOKEN` secret is set in GitHub repository settings
 - ✅ PAT token has "Packaging: Read, write, & manage" permissions
 - ✅ PAT token hasn't expired
@@ -134,16 +137,19 @@ npm update @eneco/api-schema-validator
 ## 🐛 If Something Goes Wrong
 
 ### Workflow fails with authentication error
+
 - Check the `AZURE_ARTIFACTS_TOKEN` secret in GitHub Settings → Secrets
 - Verify the PAT hasn't expired in Azure DevOps
 - Regenerate PAT if needed and update the secret
 
 ### Package already exists error
+
 - This shouldn't happen since we bumped to 1.0.1
 - If it does, check Azure Artifacts to confirm version doesn't exist
 - Bump version again if needed: `npm version patch`
 
 ### Build fails
+
 - Check the Actions logs for detailed error messages
 - Most likely causes: dependency installation or test failures
 - Fix the issue and push another commit to the PR
