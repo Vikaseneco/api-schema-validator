@@ -66,8 +66,10 @@ tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // RECOMMENDED: Use forBruno() - automatically resolves path to your collection
-  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
+  // Use bru.cwd() to get Bruno collection path
+  const collectionPath = bru.cwd();
+  const schemaPath = `${collectionPath}/api-schemas`;
+  const validator = new SchemaValidator(schemaPath);
   
   test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
@@ -89,7 +91,16 @@ tests {
 }
 ```
 
-> **💡 Pro Tip:** The `forBruno(bru, 'api-schemas')` method automatically resolves the schema path relative to your Bruno collection directory. This ensures schemas are loaded from your collection folder, not Bruno's installation folder.
+**Folder Structure:**
+```
+bruno-collection/
+├── api-schemas/           ← Store schemas here
+│   └── jsonplaceholder/
+│       └── Users_schema.json
+└── GetUsers.bru          ← Your test file
+```
+
+> **💡 Pro Tip:** Using `bru.cwd()` automatically resolves the path to your Bruno collection folder, so schemas are stored with your tests and can be version controlled together.
 
 ## 📚 API Documentation
 
@@ -101,46 +112,23 @@ Creates a new validator instance.
 
 **Parameters:**
 
-- `schemaBasePath` (string, optional) - Base directory for schema files. Default: `'./api-schemas'`
-  - Can be relative (resolved from `process.cwd()`) or absolute path
+- `schemaBasePath` (string, **required**) - Path to your schema directory (absolute or relative)
 
 **Example:**
 
 ```javascript
-const validator = new SchemaValidator('./my-schemas');
+// For Bruno: Use bru.cwd() to get collection path
+const collectionPath = bru.cwd();
+const schemaPath = `${collectionPath}/api-schemas`;
+const validator = new SchemaValidator(schemaPath);
+
+// For Node.js: Use absolute path
+const validator = new SchemaValidator('C:/projects/my-api/api-schemas');
+
+// For Node.js: Use relative path with __dirname
+const path = require('path');
+const validator = new SchemaValidator(path.join(__dirname, 'api-schemas'));
 ```
-
----
-
-### Static Methods
-
-#### `SchemaValidator.forBruno(bru, schemaFolder)`
-
-Creates a validator instance specifically for Bruno API testing. This is the **recommended** way to use the package in Bruno.
-
-**Parameters:**
-
-- `bru` (object) - The Bruno context object (available in all `.bru` test files)
-- `schemaFolder` (string, optional) - Name of the schema folder relative to collection root. Default: `'api-schemas'`
-
-**Returns:** `SchemaValidator` - A new validator instance with the correct path
-
-**Example:**
-
-```javascript
-// In your .bru test file
-tests {
-  const SchemaValidator = require('bruno-api-schema-validator');
-  
-  // Automatically finds schemas in: <collection-root>/api-schemas/
-  const validator = SchemaValidator.forBruno(bru);
-  
-  // Or specify a custom folder
-  const validator2 = SchemaValidator.forBruno(bru, 'my-schemas');
-}
-```
-
-**Why use this?** Bruno runs from its installation directory, not your collection directory. The `forBruno()` method uses `bru.cwd()` to automatically resolve the correct path to your collection's schema folder.
 
 ---
 

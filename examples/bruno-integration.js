@@ -1,7 +1,14 @@
 /**
  * Example: Using bruno-api-schema-validator in Bruno API tests
  * 
- * This shows how to integrate the package in your Bruno .bru files
+ * Recommended folder structure:
+ * 
+ * bruno-collections/                    ← Your Bruno collection (tracked in Git)
+ * └── my-collection/
+ *     ├── api-schemas/                  ← Schemas here (tracked with collection)
+ *     │   └── jsonplaceholder/
+ *     │       └── Users_schema.json
+ *     └── GetUsers.bru                 ← Use bru.cwd() to find schemas
  */
 
 // ========================================
@@ -30,10 +37,11 @@ docs {
 tests {
   const jsonData = res.getBody();
   
-  // RECOMMENDED: Use forBruno() helper method
-  // This automatically resolves the path relative to your Bruno collection
+  // RECOMMENDED: Use bru.cwd() to construct path to schemas in your collection
   const SchemaValidator = require('bruno-api-schema-validator');
-  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
+  const collectionPath = bru.cwd();
+  const schemaPath = `${collectionPath}/api-schemas`;
+  const validator = new SchemaValidator(schemaPath);
   
   test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
@@ -62,34 +70,6 @@ tests {
 */
 
 // ========================================
-// EXAMPLE 1B: Alternative Bruno Integration (Manual Path)
-// ========================================
-
-/*
-File: GetUsers_ManualPath.bru
-
-tests {
-  const jsonData = res.getBody();
-  
-  // ALTERNATIVE: Manually construct the absolute path
-  const SchemaValidator = require('bruno-api-schema-validator');
-  const path = require('path');
-  const schemaPath = path.join(bru.cwd(), 'api-schemas');
-  const validator = new SchemaValidator(schemaPath);
-  
-  test("Valid response JSON schema - Users", function(){
-    const result = validator.validateJsonSchemaSync(
-      'jsonplaceholder', 
-      'Users', 
-      jsonData,
-      { verbose: true }
-    );
-    expect(result).to.equal(true);
-  });
-}
-*/
-
-// ========================================
 // EXAMPLE 2: First-time Schema Creation
 // ========================================
 
@@ -110,23 +90,29 @@ get {
 
 docs {
   This request creates a JSON schema from the users API response.
+  Schema will be saved in your Bruno collection's api-schemas folder.
 }
 
 tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Use forBruno() for automatic path resolution
-  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
+  // Get Bruno collection path and construct schema path
+  const collectionPath = bru.cwd();
+  console.log('Collection path:', collectionPath);
+  const schemaPath = `${collectionPath}/api-schemas`;
+  const validator = new SchemaValidator(schemaPath);
   
   test("Create schema from response", async function(){
     // First time: create schema from the API response
-    const schemaPath = await validator.createJsonSchema(
+    // This will save to: <collection>/api-schemas/jsonplaceholder/Users_schema.json
+    const createdPath = await validator.createJsonSchema(
       'jsonplaceholder',
       'Users',
       jsonData
     );
-    console.log('✓ Schema created at:', schemaPath);
+    console.log('✓ Schema created at:', createdPath);
+    console.log('✓ Remember to commit this schema to Git!');
   });
   
   // After creating schema, use the regular validation test from Example 1
@@ -156,8 +142,10 @@ tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Use forBruno() for automatic path resolution
-  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
+  // Use bru.cwd() to construct path
+  const collectionPath = bru.cwd();
+  const schemaPath = `${collectionPath}/api-schemas`;
+  const validator = new SchemaValidator(schemaPath);
   
   test("Schema validation with custom options", function(){
     const result = validator.validateJsonSchemaSync(
@@ -178,9 +166,9 @@ tests {
   });
   
   test("Get schema file path", function(){
-    const schemaPath = validator.getSchemaPath('jsonplaceholder', 'Users');
-    console.log('Schema location:', schemaPath);
-    expect(schemaPath).to.include('Users_schema.json');
+    const fullSchemaPath = validator.getSchemaPath('jsonplaceholder', 'Users');
+    console.log('Schema location:', fullSchemaPath);
+    expect(fullSchemaPath).to.include('Users_schema.json');
   });
 }
 */
@@ -207,8 +195,10 @@ get {
 tests {
   const SchemaValidator = require('bruno-api-schema-validator');
   
-  // Use forBruno() for automatic path resolution
-  const validator = SchemaValidator.forBruno(bru, 'api-schemas');
+  // Use bru.cwd() to construct path
+  const collectionPath = bru.cwd();
+  const schemaPath = `${collectionPath}/api-schemas`;
+  const validator = new SchemaValidator(schemaPath);
   
   // Test Posts endpoint
   test("Validate Posts schema", function(){
