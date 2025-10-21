@@ -32,39 +32,57 @@ const SchemaValidator = require('bruno-api-schema-validator');
 // Create validator instance
 const validator = new SchemaValidator('./api-schemas');
 
-// Your API response
+// Your API response from https://jsonplaceholder.typicode.com/users
 const apiResponse = [
-  { name: "Asset-001", id: "123", fullName: "Solar Farm" }
+  {
+    id: 1,
+    name: "Leanne Graham",
+    username: "Bret",
+    email: "Sincere@april.biz",
+    address: {
+      street: "Kulas Light",
+      suite: "Apt. 556",
+      city: "Gwenborough",
+      zipcode: "92998-3874"
+    }
+  }
 ];
 
 // Step 1: Generate schema (one-time)
-await validator.createJsonSchema('vpp/Asset Manager', 'RegisteredAssets', apiResponse);
+await validator.createJsonSchema('jsonplaceholder', 'Users', apiResponse);
 
 // Step 2: Validate responses
-const isValid = validator.validateJsonSchemaSync('vpp/Asset Manager', 'RegisteredAssets', apiResponse);
+const isValid = validator.validateJsonSchemaSync('jsonplaceholder', 'Users', apiResponse);
 console.log(isValid); // true
 ```
 
 ### Bruno API Testing Integration
 
 ```javascript
-// In your .bru file
+// In your .bru file: GetUsers.bru
+// GET https://jsonplaceholder.typicode.com/users
+
 tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
   const validator = new SchemaValidator('./api-schemas');
   
-  test("Valid response JSON schema", function(){
+  test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
-      'vpp/Asset Manager', 
-      'RegisteredAssets', 
-      jsonData
+      'jsonplaceholder', 
+      'Users', 
+      jsonData,
+      { verbose: true }
     );
     expect(result).to.equal(true);
   });
   
   test("Status code is 200", function () {
     expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function () {
+    expect(jsonData).to.be.an("array");
   });
 }
 ```
@@ -106,8 +124,12 @@ Generates a JSON schema from a response and saves it to disk.
 **Example:**
 
 ```javascript
-await validator.createJsonSchema('api/v1', 'Users', userApiResponse);
-// Creates: ./api-schemas/api/v1/Users_schema.json
+// Fetch data from JSONPlaceholder API
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
+await validator.createJsonSchema('jsonplaceholder', 'Users', users);
+// Creates: ./api-schemas/jsonplaceholder/Users_schema.json
 ```
 
 ---
@@ -130,10 +152,11 @@ Synchronously validates data against a schema. **Use this in Bruno tests.**
 **Example:**
 
 ```javascript
+// Validate users data from JSONPlaceholder API
 const isValid = validator.validateJsonSchemaSync(
-  'vpp/Asset Manager',
-  'RegisteredAssets',
-  apiResponse,
+  'jsonplaceholder',
+  'Users',
+  usersData,
   { verbose: true, throwOnError: false }
 );
 ```
@@ -159,11 +182,14 @@ Asynchronously validates data against a schema.
 **Example:**
 
 ```javascript
-// Validate and create schema if missing
+// Validate users and create schema if missing
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
 const isValid = await validator.validateJsonSchema(
-  'api/v1',
-  'Products',
-  productsResponse,
+  'jsonplaceholder',
+  'Users',
+  users,
   { createSchema: true, verbose: true }
 );
 ```
@@ -331,14 +357,15 @@ cat api-schemas/api/v1/Users_schema.json
 const SchemaValidator = require('bruno-api-schema-validator');
 const validator = new SchemaValidator('./api-schemas');
 
-// First time: Create schema from a good API response
-const goodResponse = await fetch('https://api.example.com/assets').then(r => r.json());
+// First time: Create schema from JSONPlaceholder API response
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
 
-await validator.createJsonSchema('api/v1', 'Assets', goodResponse);
+await validator.createJsonSchema('jsonplaceholder', 'Users', users);
 console.log('✓ Schema created successfully');
 
 // Now use it in tests
-const isValid = validator.validateJsonSchemaSync('api/v1', 'Assets', goodResponse);
+const isValid = validator.validateJsonSchemaSync('jsonplaceholder', 'Users', users);
 console.log('Validation:', isValid); // true
 ```
 
@@ -347,30 +374,37 @@ console.log('Validation:', isValid); // true
 ```javascript
 const validator = new SchemaValidator('./api-schemas');
 
-// Test multiple related endpoints with separate schemas
-test("Assets endpoint schema", () => {
-  expect(validator.validateJsonSchemaSync('api/v1', 'Assets', assetsData)).toBe(true);
+// Test multiple JSONPlaceholder endpoints with separate schemas
+test("Users endpoint schema", async () => {
+  const users = await fetch('https://jsonplaceholder.typicode.com/users').then(r => r.json());
+  expect(validator.validateJsonSchemaSync('jsonplaceholder', 'Users', users)).toBe(true);
 });
 
-test("Users endpoint schema", () => {
-  expect(validator.validateJsonSchemaSync('api/v1', 'Users', usersData)).toBe(true);
+test("Posts endpoint schema", async () => {
+  const posts = await fetch('https://jsonplaceholder.typicode.com/posts').then(r => r.json());
+  expect(validator.validateJsonSchemaSync('jsonplaceholder', 'Posts', posts)).toBe(true);
 });
 
-test("Orders endpoint schema", () => {
-  expect(validator.validateJsonSchemaSync('api/v1', 'Orders', ordersData)).toBe(true);
+test("Comments endpoint schema", async () => {
+  const comments = await fetch('https://jsonplaceholder.typicode.com/comments').then(r => r.json());
+  expect(validator.validateJsonSchemaSync('jsonplaceholder', 'Comments', comments)).toBe(true);
 });
 ```
 
 ### Example 3: Custom Error Handling
 
 ```javascript
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
 try {
   const isValid = validator.validateJsonSchemaSync(
-    'api/v1',
+    'jsonplaceholder',
     'Users',
-    userData,
+    users,
     { verbose: true, throwOnError: true }
   );
+  console.log('✓ Validation passed');
 } catch (error) {
   console.error('Validation failed:', error.message);
   // Send alert, log to monitoring system, etc.
@@ -383,13 +417,17 @@ try {
 ```javascript
 const validator = new SchemaValidator('./api-schemas');
 
+// Fetch users from JSONPlaceholder
+const response = await fetch('https://jsonplaceholder.typicode.com/users');
+const users = await response.json();
+
 // Create schema only if it doesn't exist
-if (!validator.schemaExists('api/v1', 'NewEndpoint')) {
-  await validator.createJsonSchema('api/v1', 'NewEndpoint', apiResponse);
-  console.log('New schema created');
+if (!validator.schemaExists('jsonplaceholder', 'Users')) {
+  await validator.createJsonSchema('jsonplaceholder', 'Users', users);
+  console.log('✓ New schema created for Users endpoint');
 } else {
   console.log('Schema already exists, validating...');
-  const isValid = validator.validateJsonSchemaSync('api/v1', 'NewEndpoint', apiResponse);
+  const isValid = validator.validateJsonSchemaSync('jsonplaceholder', 'Users', users);
   console.log('Valid:', isValid);
 }
 ```
@@ -397,18 +435,22 @@ if (!validator.schemaExists('api/v1', 'NewEndpoint')) {
 ### Example 5: Bruno - Complete Integration
 
 ```javascript
-// File: GetRegisteredAssets.bru
+// File: GetUsers.bru
 
 meta {
-  name: GetRegisteredAssets_Automatic
+  name: Get Users
   type: http
   seq: 1
 }
 
 get {
-  url: {{AssetURL}}/v1/Asset/GetRegisteredAssets?steeringMode=Automatic
+  url: https://jsonplaceholder.typicode.com/users
   body: none
-  auth: inherit
+  auth: none
+}
+
+docs {
+  This request retrieves a list of users from the JSONPlaceholder API.
 }
 
 tests {
@@ -417,10 +459,10 @@ tests {
   const validator = new SchemaValidator('./api-schemas');
   
   // Schema validation test
-  test("Valid response JSON schema - Asset Registered", function(){
+  test("Valid response JSON schema - Users", function(){
     const result = validator.validateJsonSchemaSync(
-      'vpp/Asset Manager',
-      'Automatic_RegisteredAssets',
+      'jsonplaceholder',
+      'Users',
       jsonData,
       { verbose: true }
     );
@@ -436,8 +478,14 @@ tests {
     expect(jsonData).to.be.an("array");
   });
   
-  test("At least one asset returned", function () {
+  test("At least one user returned", function () {
     expect(jsonData.length).to.be.greaterThan(0);
+  });
+  
+  test("First user has required fields", function () {
+    expect(jsonData[0]).to.have.property('id');
+    expect(jsonData[0]).to.have.property('name');
+    expect(jsonData[0]).to.have.property('email');
   });
 }
 ```
