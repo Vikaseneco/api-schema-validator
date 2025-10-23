@@ -946,5 +946,5 @@ Schema validation in Bruno API testing provides:
 **Package**: bruno-api-schema-validator  
 **Author**: Vikas Yadav  
 **Last Updated**: October 23, 2025  
-**Version**: 1.1.0  
+**Version**: 1.2.0  
 **License**: MIT
