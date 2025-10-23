@@ -7,14 +7,16 @@
 
 ## 🚀 Features
 
+- ✅ **Auto-Detection** - Automatically detects Bruno environment (no manual `bru.cwd()` needed!)
 - ✅ **Automatic Schema Generation** - Generate JSON schemas from API responses
+- ✅ **Auto-Create on Validation** - NEW! Use `createSchema: true` to auto-generate schemas during validation
 - ✅ **Synchronous & Asynchronous Validation** - Choose the right method for your use case
 - ✅ **Bruno API Testing Integration** - Perfect for Bruno .bru test files
 - ✅ **Detailed Error Reporting** - Know exactly what failed and where
 - ✅ **Array Validation** - Validates all array items uniformly
 - ✅ **Flexible Schema Storage** - Organize schemas by endpoint/version
 - ✅ **Draft-07 JSON Schema** - Standards-compliant validation
-- ✅ **Zero Configuration** - Works out of the box
+- ✅ **Zero Configuration** - Works out of the box with sensible defaults
 
 ## 📦 Installation
 
@@ -101,6 +103,36 @@ bruno-collection/
 ```
 
 > **💡 Pro Tip:** The validator automatically detects Bruno environment and uses `bru.cwd()` internally! No manual path construction needed. Just call `new SchemaValidator()` and you're done!
+
+### 🆕 Auto-Create Schemas (New in v1.1.0!)
+
+No schema file yet? No problem! Use `createSchema: true` to automatically generate schemas on first run:
+
+```javascript
+tests {
+  const jsonData = res.getBody();
+  const SchemaValidator = require('bruno-api-schema-validator');
+  const validator = new SchemaValidator();
+  
+  test("Auto-create and validate schema", function(){
+    // First run: Creates schema automatically
+    // Subsequent runs: Validates against existing schema
+    const result = validator.validateJsonSchemaSync(
+      'jsonplaceholder',
+      'Users',
+      jsonData,
+      { createSchema: true }  // 🎉 Magic happens here!
+    );
+    expect(result).to.equal(true);
+  });
+}
+```
+
+**Benefits:**
+- ✅ No manual schema creation needed
+- ✅ Automatically creates folder structure
+- ✅ Perfect for new tests - just add `createSchema: true`
+- ✅ Works in both Bruno and Node.js environments
 
 ## 📚 API Documentation
 
