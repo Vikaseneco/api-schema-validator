@@ -247,7 +247,9 @@ const isValid = validator.validateJsonSchemaSync(
 
 #### `validateJsonSchema(folderName, fileName, body, options)`
 
-Asynchronously validates data against a schema.
+Asynchronously validates data against a schema. **Use this in Node.js test frameworks (Jest, Mocha, Vitest) and automation scripts.**
+
+> ⚠️ **Note:** Bruno doesn't support async/await in tests. Use `validateJsonSchemaSync()` for Bruno instead.
 
 **Parameters:**
 
@@ -261,19 +263,43 @@ Asynchronously validates data against a schema.
 
 **Returns:** `Promise<boolean>` - `true` if valid, `false` otherwise
 
+**Use Cases:**
+- ✅ Jest/Mocha/Vitest test suites
+- ✅ CI/CD validation scripts
+- ✅ Node.js automation scripts
+- ✅ Integration test frameworks
+- ❌ Bruno API tests (use sync version)
+
 **Example:**
 
 ```javascript
-// Validate users and create schema if missing
-const response = await fetch('https://jsonplaceholder.typicode.com/users');
-const users = await response.json();
+// Jest/Mocha test example
+describe('API Schema Validation', () => {
+  it('should validate users endpoint', async () => {
+    const validator = new SchemaValidator('./api-schemas');
+    const response = await fetch('https://jsonplaceholder.typicode.com/users');
+    const users = await response.json();
 
-const isValid = await validator.validateJsonSchema(
-  'jsonplaceholder',
-  'Users',
-  users,
-  { createSchema: true, verbose: true }
-);
+    const isValid = await validator.validateJsonSchema(
+      'jsonplaceholder',
+      'Users',
+      users,
+      { createSchema: true, verbose: true }
+    );
+    
+    expect(isValid).toBe(true);
+  });
+});
+
+// CI/CD script example
+async function validateContract() {
+  const validator = new SchemaValidator('./schemas');
+  const data = await fetchApiData();
+  
+  await validator.validateJsonSchema('api/v1', 'Users', data, {
+    throwOnError: true  // Fail CI if validation fails
+  });
+}
 ```
 
 ---
