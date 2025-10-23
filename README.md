@@ -185,20 +185,29 @@ Synchronously validates data against a schema. **Use this in Bruno tests.**
 - `fileName` (string) - Schema file base name
 - `body` (object/array) - Data to validate
 - `options` (object, optional):
+  - `createSchema` (boolean) - Auto-create schema if it doesn't exist. Default: `false`
   - `verbose` (boolean) - Show detailed errors. Default: `true`
   - `throwOnError` (boolean) - Throw exception on validation failure. Default: `false`
 
 **Returns:** `boolean` - `true` if valid, `false` otherwise
 
-**Example:**
+**Examples:**
 
 ```javascript
-// Validate users data from JSONPlaceholder API
+// Standard validation
 const isValid = validator.validateJsonSchemaSync(
   'jsonplaceholder',
   'Users',
   usersData,
   { verbose: true, throwOnError: false }
+);
+
+// Auto-create schema on first run (perfect for new tests!)
+const isValid = validator.validateJsonSchemaSync(
+  'jsonplaceholder',
+  'Users',
+  usersData,
+  { createSchema: true }  // Creates schema if missing
 );
 ```
 
