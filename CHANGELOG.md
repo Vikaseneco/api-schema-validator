@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-23
+
+### Documentation
+
+- **NEW: Comprehensive Schema Validation Guide** (`SCHEMA_VALIDATION_GUIDE.md`)
+  - 950+ lines of detailed documentation for users
+  - Complete architecture overview with Mermaid diagrams
+  - Step-by-step implementation guides
+  - 7+ real-world examples (Bruno + Node.js)
+  - Troubleshooting section with common issues and solutions
+  - Performance considerations and best practices
+  - Comparison tables showing value (50+ lines → 10 lines)
+  - CI/CD integration examples
+  - Complete getting started checklist
+
+### Added
+
+- Visual architecture diagrams using Mermaid
+- Detailed use case examples with JSONPlaceholder API
+- Production-ready code patterns and best practices
+- Schema organization and versioning guidelines
+- Comparison showing traditional testing vs schema validation approach
+
+### Benefits for Users
+
+- Faster onboarding with comprehensive examples
+- Self-service troubleshooting reduces support burden
+- Clear guidance on Bruno vs Node.js usage patterns
+- Copy-paste examples that work immediately
+- Understanding of when and why to use schema validation
+
 ## [1.1.0] - 2025-10-23
 
 ### Added
