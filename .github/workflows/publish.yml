@@ -66,7 +66,7 @@ jobs:
           echo "Publishing beta version: $BETA_VERSION"
       
       - name: Publish to npm (beta)
-        run: npm publish --tag beta
+        run: npm publish --tag beta --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -103,7 +103,7 @@ jobs:
           echo "Publishing alpha version: $ALPHA_VERSION"
       
       - name: Publish to npm (alpha)
-        run: npm publish --tag alpha
+        run: npm publish --tag alpha --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -132,6 +132,6 @@ jobs:
         run: npm install
       
       - name: Publish to npm (latest)
-        run: npm publish
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
