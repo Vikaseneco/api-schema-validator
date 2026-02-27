@@ -27,9 +27,9 @@
   },
   "dependencies": {
     "ajv": "^8.12.0",
+    "ajv-formats": "^3.0.1",
     "generate-schema": "^2.6.0"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Vikaseneco/api-schema-validator.git"
