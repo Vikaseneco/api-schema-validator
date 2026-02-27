@@ -101,7 +101,44 @@ jobs:
           ALPHA_VERSION="${CURRENT_VERSION}-alpha.${BRANCH_NAME}.${GITHUB_RUN_NUMBER}"
           npm version $ALPHA_VERSION --no-git-tag-version
           echo "Publishing alpha version: $ALPHA_VERSION"
-      
+
+      - name: Print release notes
+        run: |
+          echo "========================================"
+          echo "  Release Notes - Alpha Build"
+          echo "========================================"
+          echo ""
+          echo "  feat: schema generation with multi-format detection"
+          echo "        and nullable field support"
+          echo ""
+          echo "  Changes:"
+          echo "  - Add FORMAT_PATTERNS constant with 10 format detectors:"
+          echo "    date-time, date, time, duration, uuid, email,"
+          echo "    uri, ipv4, ipv6, hostname"
+          echo "  - Add _detectFormat(): runs all patterns, first match wins"
+          echo "  - Add _getTypeDescriptor(): returns full schema fragment"
+          echo "    including format keyword"
+          echo "  - Add _mergeTypeInfo(): scans ALL array items (not just"
+          echo "    first) for accurate nullable detection and consistent"
+          echo "    format inference across the dataset"
+          echo "  - Add _getRequiredFields(): marks a field required only"
+          echo "    when present and non-null in EVERY sample item"
+          echo "  - Update _enrichSchemaFormats(): handles union types and"
+          echo "    delegates to _mergeTypeInfo for nested array schemas"
+          echo "  - Update createJsonSchema() and validateJsonSchemaSync()"
+          echo "    to use new helpers"
+          echo "  - Add ajv-formats dependency for format validation"
+          echo "    enforcement in AJV"
+          echo ""
+          echo "  Edge cases handled:"
+          echo "  - Nullable fields: { type: ['string','null'], format: 'date-time' }"
+          echo "  - Fields absent from some items are treated as nullable"
+          echo "  - Mixed non-null types produce a union type without format"
+          echo "  - Plain words are not false-matched as hostname"
+          echo "    (requires dot in FQDN)"
+          echo ""
+          echo "========================================"
+
       - name: Publish to npm (alpha)
         run: npm publish --tag alpha --access public
         env:
