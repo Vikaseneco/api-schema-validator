@@ -189,7 +189,7 @@ async function runTests() {
       }
     };
     const validData = { email: 'test@example.com', phone: '123-456-7890' };
-    const result = validator.validateSync(schema, validData);
+    const result = validator.validateJsonSchemaSync(schema, validData);
     assert.strictEqual(result.valid, true, 'Should validate with custom formats');
   });
 
