@@ -49,22 +49,29 @@ const invalidTestData = [
 const testSchemaPath = './test-schemas';
 let passedTests = 0;
 let failedTests = 0;
+const pendingTests = [];
 
 // Helper to track test results
 function test(name, fn) {
-  try {
-    fn();
-    console.log(`✓ PASS: ${name}\n`);
-    passedTests++;
-  } catch (error) {
-    console.error(`✗ FAIL: ${name}`);
-    console.error(`  Error: ${error.message}\n`);
-    failedTests++;
-  }
+  const testPromise = Promise.resolve()
+    .then(() => fn())
+    .then(() => {
+      console.log(`✓ PASS: ${name}\n`);
+      passedTests++;
+    })
+    .catch((error) => {
+      console.error(`✗ FAIL: ${name}`);
+      console.error(`  Error: ${error.message}\n`);
+      failedTests++;
+    });
+
+  pendingTests.push(testPromise);
+  return testPromise;
 }
 
 // Cleanup function
-function cleanup() {
+async function cleanup() {
+  await Promise.allSettled(pendingTests);
   if (fs.existsSync(testSchemaPath)) {
     fs.rmSync(testSchemaPath, { recursive: true, force: true });
   }
