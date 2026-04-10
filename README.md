@@ -1,26 +1,35 @@
 # bruno-api-schema-validator
 
-> A flexible JSON schema validation library for API testing with automatic schema generation and synchronous/asynchronous validation support. Perfect for Bruno API client and automated testing.
+> Advanced JSON schema validation library for API testing with 17 powerful features including automatic schema generation, performance testing, mock data generation, and CI/CD integration.
 
 [![npm version](https://img.shields.io/npm/v/bruno-api-schema-validator.svg)](https://www.npmjs.com/package/bruno-api-schema-validator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Features
+## 🚀 Key Features
 
-- ✅ **Auto-Detection** - Automatically detects Bruno environment (no manual `bru.cwd()` needed!)
-- ✅ **Automatic Schema Generation** - Generate JSON schemas from API responses
-- ✅ **Auto-Create on Validation** - NEW! Use `createSchema: true` to auto-generate schemas during validation
-- ✅ **Synchronous & Asynchronous Validation** - Choose the right method for your use case
-- ✅ **Bruno API Testing Integration** - Perfect for Bruno .bru test files
-- ✅ **Detailed Error Reporting** - Know exactly what failed and where
-- ✅ **Array Validation** - Validates all array items uniformly
-- ✅ **Flexible Schema Storage** - Organize schemas by endpoint/version
-- ✅ **Draft-07 JSON Schema** - Standards-compliant validation
-- ✅ **Zero Configuration** - Works out of the box with sensible defaults
-- ✅ **Smart Format Detection** - Auto-detects 10 string formats: `date-time`, `date`, `time`, `duration`, `uuid`, `email`, `uri`, `ipv4`, `ipv6`, `hostname`
-- ✅ **Nullable Field Awareness** - Scans all array items to correctly detect optional/nullable fields
-- ✅ **Accurate Required Fields** - Only marks fields `required` when present and non-null in every sample item
-- ✅ **Format Enforcement** - Validates detected formats at runtime via `ajv-formats`
+### Core Validation
+- ✅ **Auto-Detection** - Automatically detects Bruno environment
+- ✅ **Automatic Schema Generation** - Generate JSON schemas from API responses  
+- ✅ **Synchronous & Asynchronous Validation** - Choose the right method
+- ✅ **Smart Format Detection** - Auto-detects 10+ string formats (UUID, email, date-time, etc.)
+- ✅ **Advanced AJV Options** - allErrors, verbose, custom formats, union types
+
+### Advanced Features (NEW!)
+- 🔥 **Schema Evolution** - Track versions, detect breaking changes automatically
+- 🔥 **Performance Testing** - Validate response time and size limits
+- 🔥 **Mock Data Generation** - Generate test data from schemas using Faker
+- 🔥 **OpenAPI/Swagger Support** - Import/export OpenAPI specifications
+- 🔥 **Snapshot Testing** - Differential validation with field ignoring
+- 🔥 **Environment-Specific Schemas** - Different schemas per environment
+- 🔥 **Request Validation** - Validate body, headers, and query parameters
+- 🔥 **Automated Documentation** - Generate markdown docs from schemas
+- 🔥 **CI/CD Reports** - JUnit XML, HTML, JSON, Console reporters
+- 🔥 **Schema Migration** - Transform schemas between versions
+- 🔥 **Fuzzy Matching** - Tolerance-based validation for flexible testing
+- 🔥 **Batch Validation** - Parallel validation of multiple endpoints
+- 🔥 **Runtime Modification** - Dynamically modify schemas
+- 🔥 **Security Validation** - PII detection, GDPR/HIPAA compliance
+- 🔥 **Performance Benchmarking** - Measure validation speed
 
 ## 📦 Installation
 
@@ -35,68 +44,41 @@ npm install bruno-api-schema-validator
 ```javascript
 const SchemaValidator = require('bruno-api-schema-validator');
 
-// For Bruno: Super simple - no parameters needed!
-// Automatically uses bru.cwd() and 'api-schemas' folder
+// For Bruno: Auto-detects environment!
 const validator = new SchemaValidator();
 
-// Your API response from https://jsonplaceholder.typicode.com/users
+// Your API response
 const apiResponse = [
   {
-    id: 1,
-    name: "Leanne Graham",
-    username: "Bret",
-    email: "Sincere@april.biz",
-    address: {
-      street: "Kulas Light",
-      suite: "Apt. 556",
-      city: "Gwenborough",
-      zipcode: "92998-3874"
-    }
+    id: "123e4567-e89b-12d3-a456-426614174000",
+    name: "Test Asset",
+    email: "test@example.com"
   }
 ];
 
-// Step 1: Generate schema (one-time)
-await validator.createJsonSchema('jsonplaceholder', 'Users', apiResponse);
+// Generate schema (one-time)
+await validator.createJsonSchema('api', 'Users', apiResponse);
 
-// Step 2: Validate responses
-const isValid = validator.validateJsonSchemaSync('jsonplaceholder', 'Users', apiResponse);
+// Validate responses
+const isValid = validator.validateJsonSchemaSync('api', 'Users', apiResponse);
 console.log(isValid); // true
 ```
 
-### Bruno API Testing Integration
+### Bruno API Testing
 
 ```javascript
-// In your .bru file: GetUsers.bru
-// GET https://jsonplaceholder.typicode.com/users
-
+// In your .bru file
 tests {
   const jsonData = res.getBody();
   const SchemaValidator = require('bruno-api-schema-validator');
-  
-  // Super simple - auto-detects Bruno environment!
   const validator = new SchemaValidator();
   
-  test("Valid response JSON schema - Users", function(){
-    const result = validator.validateJsonSchemaSync(
-      'jsonplaceholder', 
-      'Users', 
-      jsonData,
-      { verbose: true }
-    );
+  test("Valid response schema", function(){
+    const result = validator.validateJsonSchemaSync('api', 'Users', jsonData);
     expect(result).to.equal(true);
-  });
-  
-  test("Status code is 200", function () {
-    expect(res.getStatus()).to.equal(200);
-  });
-  
-  test("Response is an array", function () {
-    expect(jsonData).to.be.an("array");
   });
 }
 ```
-
-**Folder Structure:**
 
 ```
 bruno-collection/
