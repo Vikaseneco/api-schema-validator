@@ -26,6 +26,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.4.0",
     "ajv": "^8.12.0",
     "ajv-formats": "^3.0.1",
     "generate-schema": "^2.6.0"
