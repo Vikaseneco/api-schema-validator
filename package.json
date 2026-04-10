@@ -26,10 +26,18 @@
     "access": "public"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.4.0",
     "ajv": "^8.12.0",
-    "generate-schema": "^2.6.0"
+    "benchmark": "^2.1.4",
+    "better-ajv-errors": "^2.0.3",
+    "generate-schema": "^2.6.0",
+    "graphql": "^16.13.2",
+    "js-yaml": "^4.1.1",
+    "jstat": "^1.9.6",
+    "openapi-typescript-validator": "^4.0.0",
+    "string-similarity": "^4.0.4",
+    "uuid": "^13.0.0"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Vikaseneco/api-schema-validator.git"
