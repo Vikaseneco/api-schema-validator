@@ -36,6 +36,6 @@
     "url": "git+https://github.com/Vikaseneco/api-schema-validator.git"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   }
 }
