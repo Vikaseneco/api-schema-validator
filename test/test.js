@@ -95,35 +95,35 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 1: Basic schema creation
-  test('Create JSON schema', () => {
+  await test('Create JSON schema', async () => {
     const validator = new SchemaValidator(testSchemaPath);
-    const schemaPath = validator.createJsonSchema('test/api', 'TestAssets', testData);
+    const schemaPath = await validator.createJsonSchema('test/api', 'TestAssets', testData);
     assert.ok(fs.existsSync(schemaPath), 'Schema file should exist');
   });
 
   // Test 2: Schema exists check
-  test('Check if schema exists', () => {
+  await test('Check if schema exists', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const exists = validator.schemaExists('test/api', 'TestAssets');
     assert.strictEqual(exists, true, 'Schema should exist');
   });
 
   // Test 3: Sync validation with valid data
-  test('Synchronous validation with valid data', () => {
+  await test('Synchronous validation with valid data', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const isValid = validator.validateJsonSchemaSync('test/api', 'TestAssets', testData, { verbose: false });
     assert.strictEqual(isValid, true, 'Validation should pass with valid data');
   });
 
   // Test 4: Sync validation with invalid data
-  test('Synchronous validation with invalid data', () => {
+  await test('Synchronous validation with invalid data', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const isValid = validator.validateJsonSchemaSync('test/api', 'TestAssets', invalidTestData, { verbose: false });
     assert.strictEqual(isValid, false, 'Validation should fail with invalid data');
   });
 
   // Test 5: Async validation
-  test('Asynchronous validation with valid data', async () => {
+  await test('Asynchronous validation with valid data', async () => {
     const validator = new SchemaValidator(testSchemaPath);
     const isValid = await validator.validateJsonSchema('test/api', 'TestAssets', testData, { verbose: false });
     assert.strictEqual(isValid, true, 'Async validation should pass');
@@ -134,7 +134,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 6: Compare schemas for breaking changes
-  test('Compare schemas - detect breaking changes', () => {
+  await test('Compare schemas - detect breaking changes', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const oldSchema = {
       type: 'object',
@@ -155,12 +155,12 @@ async function runTests() {
       required: ['id', 'name']
     };
     const changes = validator.compareSchemas(oldSchema, newSchema);
-    assert.ok(changes.breakingChanges.length > 0, 'Should detect breaking changes');
+    assert.ok(changes.breaking.length > 0, 'Should detect breaking changes');
     assert.ok(['major', 'minor', 'patch'].includes(changes.recommendedVersionBump), 'Should recommend version bump');
   });
 
   // Test 7: Track schema version
-  test('Track schema version', () => {
+  await test('Track schema version', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const schema = { type: 'object', properties: { id: { type: 'string' } } };
     const version = validator.trackSchemaVersion('test-schema', schema);
@@ -173,7 +173,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 8: Custom formats validation
-  test('Advanced validation with custom formats', () => {
+  await test('Advanced validation with custom formats', () => {
     const validator = new SchemaValidator(testSchemaPath, {
       allErrors: true,
       verbose: true,
@@ -198,7 +198,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 9: Validate with performance constraints
-  test('Validate with performance constraints', async () => {
+  await test('Validate with performance constraints', async () => {
     const validator = new SchemaValidator(testSchemaPath);
     const startTime = Date.now();
     const result = await validator.validateWithPerformance(
@@ -215,7 +215,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 10: Generate mock data
-  test('Generate mock data from schema', () => {
+  await test('Generate mock data from schema', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const schema = {
       type: 'object',
@@ -239,7 +239,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 11: Convert OpenAPI to JSON Schema
-  test('Convert OpenAPI spec to JSON Schema', () => {
+  await test('Convert OpenAPI spec to JSON Schema', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const openApiSpec = {
       openapi: '3.0.0',
@@ -267,7 +267,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 12: Snapshot testing
-  test('Snapshot testing - create and validate', async () => {
+  await test('Snapshot testing - create and validate', async () => {
     const validator = new SchemaValidator(testSchemaPath);
     const data = { id: '123', name: 'Test', timestamp: Date.now() };
     
@@ -285,7 +285,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 13: Environment-specific schemas
-  test('Register and use environment-specific schemas', () => {
+  await test('Register and use environment-specific schemas', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const devSchema = {
       type: 'object',
@@ -306,7 +306,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 14: Request validation
-  test('Validate request body, headers, and query params', () => {
+  await test('Validate request body, headers, and query params', () => {
     const validator = new SchemaValidator(testSchemaPath);
     
     const bodySchema = {
@@ -342,9 +342,9 @@ async function runTests() {
     };
     
     const result = validator.validateRequest(request, {
-      bodySchema,
-      headersSchema,
-      querySchema
+      body: bodySchema,
+      headers: headersSchema,
+      query: querySchema
     });
     
     assert.strictEqual(result.valid, true, 'Should validate request successfully');
@@ -355,7 +355,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 15: Generate documentation
-  test('Generate API documentation in markdown', () => {
+  await test('Generate API documentation in markdown', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const schema = {
       type: 'object',
@@ -381,7 +381,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 16: Generate CI/CD reports
-  test('Generate JUnit XML report', () => {
+  await test('Generate JUnit XML report', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const testResults = [
       { name: 'test-validation-1', passed: true, duration: 10 },
@@ -394,7 +394,7 @@ async function runTests() {
   });
 
   // Test 17: Generate HTML report
-  test('Generate HTML report', () => {
+  await test('Generate HTML report', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const testResults = [
       { name: 'test-1', passed: true, duration: 10 },
@@ -411,7 +411,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 18: Migrate schema
-  test('Migrate schema with transformations', () => {
+  await test('Migrate schema with transformations', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const oldSchema = {
       type: 'object',
@@ -435,7 +435,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 19: Validate with tolerance
-  test('Validate with fuzzy matching tolerance', () => {
+  await test('Validate with fuzzy matching tolerance', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const schema = {
       type: 'object',
@@ -459,7 +459,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 20: Batch validation
-  test('Batch validate multiple endpoints', async () => {
+  await test('Batch validate multiple endpoints', async () => {
     const validator = new SchemaValidator(testSchemaPath);
     const validations = [
       { folder: 'test/api', name: 'TestAssets', data: testData[0] },
@@ -475,7 +475,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 21: Modify schema at runtime
-  test('Modify schema at runtime', () => {
+  await test('Modify schema at runtime', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const schema = {
       type: 'object',
@@ -500,7 +500,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 22: Security validation - PII detection
-  test('Detect PII in data', () => {
+  await test('Detect PII in data', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const data = {
       name: 'John Doe',
@@ -514,7 +514,7 @@ async function runTests() {
   });
 
   // Test 23: GDPR compliance check
-  test('Check GDPR compliance', () => {
+  await test('Check GDPR compliance', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const data = {
       userId: '123',
@@ -533,7 +533,7 @@ async function runTests() {
   console.log('='.repeat(60));
 
   // Test 24: Benchmark validation performance
-  test('Benchmark validation performance', () => {
+  await test('Benchmark validation performance', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const schema = {
       type: 'object',
@@ -552,14 +552,17 @@ async function runTests() {
   });
 
   // Test 25: Measure performance
-  test('Measure validation performance', async () => {
+  await test('Measure validation performance', async () => {
     const validator = new SchemaValidator(testSchemaPath);
     const measurements = await validator.measurePerformance('test/api', 'TestAssets', testData);
     assert.ok(measurements.validationTime >= 0, 'Should measure validation time');
   });
 
+  // Wait for all tests to finish
+  await Promise.allSettled(pendingTests);
+
   // Cleanup
-  cleanup();
+  await cleanup();
 
   // Print summary
   console.log('\n' + '='.repeat(60));
