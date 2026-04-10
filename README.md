@@ -17,6 +17,10 @@
 - ✅ **Flexible Schema Storage** - Organize schemas by endpoint/version
 - ✅ **Draft-07 JSON Schema** - Standards-compliant validation
 - ✅ **Zero Configuration** - Works out of the box with sensible defaults
+- ✅ **Smart Format Detection** - Auto-detects 10 string formats: `date-time`, `date`, `time`, `duration`, `uuid`, `email`, `uri`, `ipv4`, `ipv6`, `hostname`
+- ✅ **Nullable Field Awareness** - Scans all array items to correctly detect optional/nullable fields
+- ✅ **Accurate Required Fields** - Only marks fields `required` when present and non-null in every sample item
+- ✅ **Format Enforcement** - Validates detected formats at runtime via `ajv-formats`
 
 ## 📦 Installation
 
@@ -103,6 +107,87 @@ bruno-collection/
 ```
 
 > **💡 Pro Tip:** The validator automatically detects Bruno environment and uses `bru.cwd()` internally! No manual path construction needed. Just call `new SchemaValidator()` and you're done!
+
+---
+
+## 🔍 Smart Format & Type Detection (New in v1.3.0!)
+
+The schema generator now automatically detects **10 industry-standard JSON Schema formats** during schema creation and enforces them during validation. No configuration required — it just works.
+
+### Supported Formats
+
+| Format | JSON Schema keyword | Example value |
+|---|---|---|
+| ISO 8601 timestamp | `date-time` | `2024-07-25T13:36:08.365Z` |
+| ISO 8601 date | `date` | `2024-07-25` |
+| ISO 8601 time | `time` | `13:36:08.365Z` |
+| ISO 8601 duration | `duration` | `P1Y2M3DT4H5M6S` |
+| UUID (RFC 4122) | `uuid` | `550e8400-e29b-41d4-a716-446655440000` |
+| E-mail address | `email` | `user@example.com` |
+| Absolute URI / URL | `uri` | `https://api.example.com/v1` |
+| IPv4 address | `ipv4` | `192.168.1.100` |
+| IPv6 address | `ipv6` | `2001:db8::1` |
+| Hostname (FQDN) | `hostname` | `api.example.com` |
+
+### What the Generated Schema Looks Like
+
+Given this API response:
+
+```json
+[
+  {
+    "assetId": "550e8400-e29b-41d4-a716-446655440000",
+    "ownerEmail": "user@example.com",
+    "createdDate": "2024-07-25T13:36:08.3658245Z",
+    "reportDate": "2024-07-25",
+    "apiEndpoint": "https://api.example.com/v1/assets",
+    "serverIp": "192.168.1.100",
+    "status": "active",
+    "count": 42,
+    "lastModifiedDate": null
+  }
+]
+```
+
+The generated schema will be:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "assetId":          { "type": "string", "format": "uuid" },
+      "ownerEmail":       { "type": "string", "format": "email" },
+      "createdDate":      { "type": "string", "format": "date-time" },
+      "reportDate":       { "type": "string", "format": "date" },
+      "apiEndpoint":      { "type": "string", "format": "uri" },
+      "serverIp":         { "type": "string", "format": "ipv4" },
+      "status":           { "type": "string" },
+      "count":            { "type": "number" },
+      "lastModifiedDate": { "type": ["string", "null"], "format": "date-time" }
+    },
+    "required": ["assetId", "ownerEmail", "createdDate", "reportDate", "apiEndpoint", "serverIp", "status", "count"]
+  }
+}
+```
+
+> **Note:** `lastModifiedDate` is `null` in the sample, so it automatically becomes `["string", "null"]` and is excluded from `required`.
+
+### Nullable & Required Field Detection
+
+The scanner reads **all items in the array**, not just the first one. This means:
+
+| Scenario | Generated type |
+|---|---|
+| Field is always a timestamp | `{ "type": "string", "format": "date-time" }` |
+| Field is sometimes `null` | `{ "type": ["string", "null"], "format": "date-time" }` |
+| Field absent in some items | `{ "type": ["string", "null"] }` + excluded from `required` |
+| Field has mixed types | `{ "type": ["string", "number"] }` (no format) |
+| Plain word like `"active"` | `{ "type": "string" }` (no false format match) |
+
+---
 
 ### 🆕 Auto-Create Schemas (New in v1.1.0!)
 
@@ -640,20 +725,31 @@ Error loading or validating schema file: ENOENT: no such file or directory
 
 **Solution:** Fix the data type or update the schema if API changed legitimately.
 
-### Issue: Schema too strict
+### Issue: Schema too strict — `null` values or optional fields rejected
 
-**Problem:** Schema doesn't allow `null` values or optional fields.
+**Problem:** API sometimes returns `null` for a field, but the schema has `{ "type": "string" }`.
 
-**Solution:** Manually edit the schema file:
+**Solution (v1.3.0+):** This is now handled **automatically** when generating schemas.
+The generator scans all sample items: if any item has `null` for a field, the type
+becomes `["string", "null"]` and the field is excluded from `required`.
+
+If you have an **older schema** that was generated before v1.3.0, regenerate it:
+
+```javascript
+// Delete the old schema file and recreate it from a response that includes null values
+await validator.createJsonSchema('api/v1', 'Users', responseWithSomeNulls);
+```
+
+Or manually edit the schema file:
 
 ```json
 {
   "properties": {
-    "optionalField": {
-      "type": ["string", "null"]
+    "lastModifiedDate": {
+      "type": ["string", "null"],
+      "format": "date-time"
     }
-  },
-  "required": ["name", "id"]
+  }
 }
 ```
 
@@ -715,6 +811,8 @@ test("Schema validation", function(){
 4. **Update Schemas Carefully:** Review changes before updating schemas
 5. **Test First:** Generate schemas from known-good responses
 6. **Document Changes:** Add comments to schema files when needed
+7. **Multi-Item Samples:** When generating schemas, pass a response with **multiple items** and include records where optional fields are `null` — this gives the generator the full picture for nullable and required field detection
+8. **Regenerate After API Changes:** If an API field changes its type or becomes nullable, delete the old schema file and regenerate it from a fresh response
 
 ## 🤝 Contributing
 
