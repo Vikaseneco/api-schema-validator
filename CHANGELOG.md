@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Removed ESM-only dependencies:**
   - `@faker-js/faker` (v9+ is ESM-only, broke Bruno's CJS sandbox)
   - `uuid` (v14 is ESM-only, caused `SyntaxError: Unexpected token 'export'`)
+- **Removed `ajv-formats` dependency** — replaced with built-in `_addFormats()` helper that registers the same custom format validators (uuid, email, date, date-time, ipv4, ipv6, uri) directly on AJV. Zero external format dependencies.
+- **Removed `generate-schema` dependency** — replaced with built-in `_inferSchema()` function. The `generate-schema` package was last updated in 2017 (abandoned). The built-in replacement handles objects, arrays, and primitives recursively with zero external dependencies.
   - `graphql`, `string-similarity`, `benchmark` — unused
 
 ### Added

@@ -83,9 +83,8 @@
 npm install bruno-api-schema-validator
 ```
 
-**Optional dependencies** (only needed for specific features):
+**Optional dependency** (only needed for OpenAPI YAML parsing):
 ```bash
-npm install generate-schema   # Required for schemaFrom() and createJsonSchema()
 npm install js-yaml            # Required for OpenAPI YAML parsing
 ```
 
@@ -765,7 +764,6 @@ assertType(jsonData[0].name, 'string');
 
 Quick schema builder — creates a JSON Schema from a sample value.
 
-> Requires `generate-schema`: `npm install generate-schema`
 
 ```javascript
 const { schemaFrom } = require('bruno-api-schema-validator');
