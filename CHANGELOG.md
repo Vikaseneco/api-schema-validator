@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-20
+
+### ⚠️ BREAKING CHANGES
+
+- **Removed 13 features** that were bloat for API testing with Bruno CLI:
+  - `trackSchemaVersion` — schema versioning/history
+  - `validateSync` — redundant advanced validation wrapper
+  - `validateWithPerformance` / `measurePerformance` — performance testing
+  - `generateMockData` — mock data generation (Faker-based)
+  - `snapshot` / `validateSnapshot` — snapshot testing
+  - `registerEnvironmentSchema` / `validateWithEnvironment` / `getEnvironmentSchema` — environment-specific schemas
+  - `generateDocumentation` — automated markdown doc generation
+  - `printConsoleReport` / `generateJUnitReport` / `generateHTMLReport` — CI/CD reporters
+  - `migrateSchema` — schema migration/transformation
+  - `validateWithTolerance` — fuzzy matching
+  - `batchValidate` — batch validation
+  - `modifySchema` — runtime schema modification
+  - `benchmarkValidation` — performance benchmarking
+
+- **Removed ESM-only dependencies:**
+  - `@faker-js/faker` (v9+ is ESM-only, broke Bruno's CJS sandbox)
+  - `uuid` (v14 is ESM-only, caused `SyntaxError: Unexpected token 'export'`)
+  - `graphql`, `string-similarity`, `benchmark` — unused
+
+### Added
+
+- **7 new standalone assertion helpers** (no instance required, CJS-compatible):
+  - `assertArrayOf(data, itemSchema)` — validate every array item against a schema
+  - `assertEnum(value, allowedValues)` — assert value is in allowed set
+  - `assertMatch(value, regex)` — assert string matches regex pattern
+  - `assertRange(value, min, max)` — assert number is within range
+  - `assertNonEmpty(value)` — assert value is not null/undefined/empty
+  - `assertResponseTime(res, maxMs)` — assert response time within limit (uses Bruno's `res.getResponseTime()`)
+  - `assertDateBetween(value, start, end)` — assert date falls within range
+
+- **`createValidator` factory export** — shorthand for `new SchemaValidator()`
+
+### Fixed
+
+- **ESM compatibility**: Replaced all ESM-only dependencies with inline CJS implementations — no more `SyntaxError: Unexpected token 'export'` in Bruno's sandbox
+- **Snapshot path resolution**: `snapshot()` and `validateSnapshot()` used `process.cwd()` which resolved to read-only `C:\Program Files\Bruno\` — fixed to use `bru.cwd()` via `this.schemaBasePath`
+- **~60 IDE warnings**: Unused variables, JSDoc mismatches, duplicate code, throw-caught-locally patterns
+- **Duplicate code**: Extracted `_generateSchemaFromData()`, `_logValidationErrors()`, `_computeBenchmarkStats()` helpers
+- **Unresolved variable**: Fixed `folderName` reference in request validation error path
+
+### Changed
+
+- **Lazy-loaded optional dependencies**: `generate-schema` and `js-yaml` are loaded on first use — keeps module lightweight and functional even when not installed
+- **Trimmed `lib/index.js`**: From ~2320 lines to ~1120 lines (net -1200 lines)
+- **Updated README.md**: Complete rewrite reflecting trimmed API, new standalone helpers, and Bruno-focused examples
+- **Minimum kept features**: Core validation, `compareSchemas`, `openApiToJsonSchema`, `validateRequest`, `validateSecurity`/`checkPII`, and 14 standalone assertion exports
+
 ## [1.2.0] - 2025-10-23
 
 ### Documentation
