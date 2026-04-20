@@ -1,10 +1,16 @@
 /**
  * Comprehensive test file for @eneco/api-schema-validator
- * Tests all 17 new features including schema evolution, validation options, 
- * performance testing, mock data generation, and more.
+ * Tests all KEPT features: core validation, schema evolution, OpenAPI,
+ * request validation, security, and new standalone assertion helpers.
  */
 
 const SchemaValidator = require('../lib/index');
+const {
+  validate, assertSchema, assertStatus, assertFields, assertType,
+  schemaFrom, checkPII,
+  assertArrayOf, assertEnum, assertMatch, assertRange, assertNonEmpty,
+  assertResponseTime, assertDateBetween
+} = require('../lib/index');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -18,550 +24,323 @@ const testData = [
     id: "123e4567-e89b-12d3-a456-426614174000",
     email: "test@example.com",
     fullName: "Test Asset Full Name",
-    assetConfiguration: {
-      capacity: 100,
-      type: "solar"
-    }
+    assetConfiguration: { capacity: 100, type: "solar" }
   },
   {
     name: "Test Asset 2",
     id: "223e4567-e89b-12d3-a456-426614174001",
     email: "user@domain.org",
     fullName: "Another Test Asset",
-    assetConfiguration: {
-      capacity: 150,
-      type: "wind"
-    }
+    assetConfiguration: { capacity: 150, type: "wind" }
   }
 ];
 
 const invalidTestData = [
   {
     name: "Invalid Asset",
-    id: 12345, // Wrong type - should be string
+    id: 12345,
     email: "invalid-email",
     fullName: "Invalid Asset",
     assetConfiguration: null
   }
 ];
 
-// Test configuration
-const testSchemaPath = './test-schemas';
+const testSchemaPath = path.join(__dirname, 'test-schemas');
 let passedTests = 0;
 let failedTests = 0;
 const pendingTests = [];
 
-// Helper to track test results
 function test(name, fn) {
   const testPromise = Promise.resolve()
     .then(() => fn())
-    .then(() => {
-      console.log(`✓ PASS: ${name}\n`);
-      passedTests++;
-    })
-    .catch((error) => {
-      console.error(`✗ FAIL: ${name}`);
-      console.error(`  Error: ${error.message}\n`);
-      failedTests++;
-    });
-
+    .then(() => { console.log(`✓ PASS: ${name}`); passedTests++; })
+    .catch((error) => { console.error(`✗ FAIL: ${name}\n  Error: ${error.message}`); failedTests++; });
   pendingTests.push(testPromise);
   return testPromise;
 }
 
-// Cleanup function
 async function cleanup() {
   await Promise.allSettled(pendingTests);
-  if (fs.existsSync(testSchemaPath)) {
-    fs.rmSync(testSchemaPath, { recursive: true, force: true });
-  }
-  if (fs.existsSync('./snapshots')) {
-    fs.rmSync('./snapshots', { recursive: true, force: true });
-  }
-  if (fs.existsSync('./reports')) {
-    fs.rmSync('./reports', { recursive: true, force: true });
-  }
-  if (fs.existsSync('./docs')) {
-    fs.rmSync('./docs', { recursive: true, force: true });
-  }
 }
 
-// Run all tests
 async function runTests() {
-  cleanup();
-
+  // ==================== CORE FUNCTIONALITY ====================
   console.log('='.repeat(60));
   console.log('CORE FUNCTIONALITY TESTS');
   console.log('='.repeat(60));
 
-  // Test 1: Basic schema creation
   await test('Create JSON schema', async () => {
     const validator = new SchemaValidator(testSchemaPath);
     const schemaPath = await validator.createJsonSchema('test/api', 'TestAssets', testData);
     assert.ok(fs.existsSync(schemaPath), 'Schema file should exist');
   });
 
-  // Test 2: Schema exists check
   await test('Check if schema exists', () => {
     const validator = new SchemaValidator(testSchemaPath);
-    const exists = validator.schemaExists('test/api', 'TestAssets');
-    assert.strictEqual(exists, true, 'Schema should exist');
+    assert.strictEqual(validator.schemaExists('test/api', 'TestAssets'), true);
   });
 
-  // Test 3: Sync validation with valid data
   await test('Synchronous validation with valid data', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const isValid = validator.validateJsonSchemaSync('test/api', 'TestAssets', testData, { verbose: false });
-    assert.strictEqual(isValid, true, 'Validation should pass with valid data');
+    assert.strictEqual(isValid, true);
   });
 
-  // Test 4: Sync validation with invalid data
   await test('Synchronous validation with invalid data', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const isValid = validator.validateJsonSchemaSync('test/api', 'TestAssets', invalidTestData, { verbose: false });
-    assert.strictEqual(isValid, false, 'Validation should fail with invalid data');
+    assert.strictEqual(isValid, false);
   });
 
-  // Test 5: Async validation
   await test('Asynchronous validation with valid data', async () => {
     const validator = new SchemaValidator(testSchemaPath);
     const isValid = await validator.validateJsonSchema('test/api', 'TestAssets', testData, { verbose: false });
-    assert.strictEqual(isValid, true, 'Async validation should pass');
+    assert.strictEqual(isValid, true);
   });
 
+  await test('Inline schema validation (sync)', () => {
+    const validator = new SchemaValidator(testSchemaPath);
+    const schema = { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] };
+    const result = validator.validateJsonSchemaSync(schema, { name: 'test' });
+    assert.strictEqual(result.valid, true);
+  });
+
+  await test('Custom formats validation', () => {
+    const validator = new SchemaValidator(testSchemaPath, {
+      customFormats: { phone: /^\d{3}-\d{3}-\d{4}$/ }
+    });
+    const schema = { type: 'object', properties: { phone: { type: 'string', format: 'phone' } } };
+    const result = validator.validateJsonSchemaSync(schema, { phone: '123-456-7890' });
+    assert.strictEqual(result.valid, true);
+  });
+
+  // ==================== SCHEMA EVOLUTION ====================
   console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 1: SCHEMA EVOLUTION & VERSIONING');
+  console.log('SCHEMA EVOLUTION');
   console.log('='.repeat(60));
 
-  // Test 6: Compare schemas for breaking changes
   await test('Compare schemas - detect breaking changes', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const oldSchema = {
       type: 'object',
-      properties: {
-        id: { type: 'string' },
-        name: { type: 'string' },
-        email: { type: 'string' }
-      },
+      properties: { id: { type: 'string' }, name: { type: 'string' }, email: { type: 'string' } },
       required: ['id', 'name', 'email']
     };
     const newSchema = {
       type: 'object',
-      properties: {
-        id: { type: 'string' },
-        name: { type: 'string' }
-        // email removed - breaking change
-      },
+      properties: { id: { type: 'string' }, name: { type: 'string' } },
       required: ['id', 'name']
     };
     const changes = validator.compareSchemas(oldSchema, newSchema);
     assert.ok(changes.breaking.length > 0, 'Should detect breaking changes');
-    assert.ok(['major', 'minor', 'patch'].includes(changes.recommendedVersionBump), 'Should recommend version bump');
+    assert.ok(changes.breaking.some(c => c.type === 'required_field_removed'));
+    assert.strictEqual(changes.recommendedVersionBump, 'major');
   });
 
-  // Test 7: Track schema version
-  await test('Track schema version', () => {
+  await test('Compare schemas - detect type changes', () => {
     const validator = new SchemaValidator(testSchemaPath);
-    const schema = { type: 'object', properties: { id: { type: 'string' } } };
-    const version = validator.trackSchemaVersion('test-schema', schema);
-    assert.ok(version.current, 'Should have current version');
-    assert.strictEqual(version.current, '1.0.0', 'Initial version should be 1.0.0');
+    const oldSchema = { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] };
+    const newSchema = { type: 'object', properties: { name: { type: 'number' } }, required: ['name'] };
+    const changes = validator.compareSchemas(oldSchema, newSchema);
+    assert.ok(changes.breaking.some(c => c.type === 'type_changed'));
   });
 
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 2: ADVANCED VALIDATION OPTIONS');
-  console.log('='.repeat(60));
-
-  // Test 8: Custom formats validation
-  await test('Advanced validation with custom formats', () => {
-    const validator = new SchemaValidator(testSchemaPath, {
-      allErrors: true,
-      verbose: true,
-      customFormats: {
-        phone: /^\d{3}-\d{3}-\d{4}$/
-      }
-    });
-    const schema = {
-      type: 'object',
-      properties: {
-        email: { type: 'string', format: 'email' },
-        phone: { type: 'string', format: 'phone' }
-      }
-    };
-    const validData = { email: 'test@example.com', phone: '123-456-7890' };
-    const result = validator.validateJsonSchemaSync(schema, validData);
-    assert.strictEqual(result.valid, true, 'Should validate with custom formats');
-  });
-
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 3: RESPONSE TIME & PERFORMANCE TESTING');
-  console.log('='.repeat(60));
-
-  // Test 9: Validate with performance constraints
-  await test('Validate with performance constraints', async () => {
+  await test('Compare schemas - non-breaking optional field added', () => {
     const validator = new SchemaValidator(testSchemaPath);
-    const startTime = Date.now();
-    const result = await validator.validateWithPerformance(
-      'test/api', 'TestAssets', testData,
-      { maxResponseTime: 1000, maxResponseSize: 10240 }
-    );
-    const endTime = Date.now();
-    assert.strictEqual(result.valid, true, 'Should validate successfully');
-    assert.ok(endTime - startTime < 1000, 'Should complete within time limit');
+    const oldSchema = { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] };
+    const newSchema = { type: 'object', properties: { id: { type: 'string' }, age: { type: 'number' } }, required: ['id'] };
+    const changes = validator.compareSchemas(oldSchema, newSchema);
+    assert.strictEqual(changes.breaking.length, 0);
+    assert.ok(changes.nonBreaking.some(c => c.type === 'optional_field_added'));
+    assert.strictEqual(changes.recommendedVersionBump, 'minor');
   });
 
+  // ==================== OPENAPI/SWAGGER ====================
   console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 4: MOCK DATA GENERATION');
+  console.log('OPENAPI/SWAGGER');
   console.log('='.repeat(60));
 
-  // Test 10: Generate mock data
-  await test('Generate mock data from schema', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const schema = {
-      type: 'object',
-      properties: {
-        id: { type: 'string', format: 'uuid' },
-        name: { type: 'string' },
-        email: { type: 'string', format: 'email' },
-        age: { type: 'integer' }
-      },
-      required: ['id', 'name', 'email']
-    };
-    const mockData = validator.generateMockData(schema, { count: 3, seed: 123 });
-    assert.ok(Array.isArray(mockData), 'Should return array');
-    assert.strictEqual(mockData.length, 3, 'Should generate specified count');
-    assert.ok(mockData[0].id, 'Should have id field');
-    assert.ok(mockData[0].name, 'Should have name field');
-  });
-
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 5: OPENAPI/SWAGGER CONTRACT TESTING');
-  console.log('='.repeat(60));
-
-  // Test 11: Convert OpenAPI to JSON Schema
   await test('Convert OpenAPI spec to JSON Schema', () => {
     const validator = new SchemaValidator(testSchemaPath);
     const openApiSpec = {
       openapi: '3.0.0',
-      info: { title: 'Test API', version: '1.0.0' },
-      paths: {},
       components: {
         schemas: {
-          User: {
-            type: 'object',
-            properties: {
-              id: { type: 'integer' },
-              name: { type: 'string' }
-            }
-          }
+          User: { type: 'object', properties: { id: { type: 'integer' }, name: { type: 'string' } } }
         }
       }
     };
     const jsonSchema = validator.openApiToJsonSchema(openApiSpec);
-    assert.ok(jsonSchema.User, 'Should convert User schema');
-    assert.strictEqual(jsonSchema.User.type, 'object', 'Should preserve type');
+    assert.ok(jsonSchema.User);
+    assert.strictEqual(jsonSchema.User.type, 'object');
   });
 
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 6: DIFFERENTIAL VALIDATION (SNAPSHOTS)');
-  console.log('='.repeat(60));
-
-  // Test 12: Snapshot testing
-  await test('Snapshot testing - create and validate', async () => {
+  await test('Convert OpenAPI with nullable fields', () => {
     const validator = new SchemaValidator(testSchemaPath);
-    const data = { id: '123', name: 'Test', timestamp: Date.now() };
-    
-    // Create snapshot
-    const snapshotResult = await validator.snapshot('api-test', 'user-response', data, { ignoreFields: ['timestamp'] });
-    assert.ok(snapshotResult.created || snapshotResult.matched, 'Should create or match snapshot');
-    
-    // Validate against snapshot
-    const validationResult = await validator.validateSnapshot('api-test', 'user-response', data, { ignoreFields: ['timestamp'] });
-    assert.ok(validationResult.matched || validationResult.valid, 'Should validate against snapshot');
-  });
-
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 7: ENVIRONMENT-SPECIFIC VALIDATION');
-  console.log('='.repeat(60));
-
-  // Test 13: Environment-specific schemas
-  await test('Register and use environment-specific schemas', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const devSchema = {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        debug: { type: 'boolean' }
-      },
-      required: ['id', 'debug']
-    };
-    validator.registerEnvironmentSchema('test-env', 'dev', devSchema);
-    const retrieved = validator.getEnvironmentSchema('test-env', 'dev');
-    assert.ok(retrieved, 'Should retrieve environment schema');
-    assert.strictEqual(retrieved.properties.debug.type, 'boolean', 'Should have debug field');
-  });
-
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 9: REQUEST VALIDATION');
-  console.log('='.repeat(60));
-
-  // Test 14: Request validation
-  await test('Validate request body, headers, and query params', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    
-    const bodySchema = {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        email: { type: 'string', format: 'email' }
-      },
-      required: ['name']
-    };
-    
-    const headersSchema = {
-      type: 'object',
-      properties: {
-        authorization: { type: 'string' },
-        'content-type': { type: 'string' }
-      },
-      required: ['authorization']
-    };
-    
-    const querySchema = {
-      type: 'object',
-      properties: {
-        page: { type: 'integer' },
-        limit: { type: 'integer' }
+    const spec = {
+      components: {
+        schemas: {
+          Item: { type: 'object', properties: { note: { type: 'string', nullable: true } } }
+        }
       }
     };
-    
+    const schemas = validator.openApiToJsonSchema(spec);
+    assert.deepStrictEqual(schemas.Item.properties.note.type, ['string', 'null']);
+  });
+
+  // ==================== REQUEST VALIDATION ====================
+  console.log('\n' + '='.repeat(60));
+  console.log('REQUEST VALIDATION');
+  console.log('='.repeat(60));
+
+  await test('Validate request body, headers, and query params', () => {
+    const validator = new SchemaValidator(testSchemaPath);
     const request = {
       body: { name: 'John', email: 'john@example.com' },
       headers: { authorization: 'Bearer token', 'content-type': 'application/json' },
       query: { page: 1, limit: 10 }
     };
-    
     const result = validator.validateRequest(request, {
-      body: bodySchema,
-      headers: headersSchema,
-      query: querySchema
+      body: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+      headers: { type: 'object', properties: { authorization: { type: 'string' } }, required: ['authorization'] },
+      query: { type: 'object', properties: { page: { type: 'integer' }, limit: { type: 'integer' } } }
     });
-    
-    assert.strictEqual(result.valid, true, 'Should validate request successfully');
+    assert.strictEqual(result.valid, true);
+    assert.strictEqual(result.body.valid, true);
+    assert.strictEqual(result.headers.valid, true);
+    assert.strictEqual(result.query.valid, true);
   });
 
+  // ==================== SECURITY VALIDATION ====================
   console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 10: AUTOMATED DOCUMENTATION');
+  console.log('SECURITY VALIDATION');
   console.log('='.repeat(60));
 
-  // Test 15: Generate documentation
-  await test('Generate API documentation in markdown', () => {
+  await test('Detect PII in data (instance method)', () => {
     const validator = new SchemaValidator(testSchemaPath);
-    const schema = {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Unique identifier' },
-        name: { type: 'string', description: 'User name' },
-        email: { type: 'string', format: 'email', description: 'Email address' }
-      },
-      required: ['id', 'name']
-    };
-    const docs = validator.generateDocumentation('User API', schema, {
-      endpoint: '/api/users',
-      method: 'POST',
-      examples: [{ id: '1', name: 'John', email: 'john@example.com' }]
-    });
-    assert.ok(docs.includes('# User API'), 'Should include title');
-    assert.ok(docs.includes('/api/users'), 'Should include endpoint');
-    assert.ok(docs.includes('Properties'), 'Should include properties section');
+    const data = { name: 'John', ssn: '123-45-6789', creditCard: '4111-1111-1111-1111' };
+    const result = validator.validateSecurity(data);
+    assert.ok(result.hasPII);
+    assert.ok(result.piiFields.length > 0);
   });
 
+  await test('Detect PII (standalone checkPII)', () => {
+    const result = checkPII({ ssn: '123-45-6789' });
+    assert.ok(result.hasPII);
+    assert.ok(result.findings.some(f => f.type === 'ssn'));
+  });
+
+  await test('GDPR compliance check', () => {
+    const validator = new SchemaValidator(testSchemaPath);
+    const result = validator.validateSecurity({ email: 'user@example.com' }, { complianceStandard: 'GDPR' });
+    assert.ok(result.complianceChecks);
+  });
+
+  await test('Detect sensitive field names', () => {
+    const validator = new SchemaValidator(testSchemaPath);
+    const result = validator.validateSecurity({ password: 'secret123', api_key: 'abc' });
+    assert.ok(result.issues.some(i => i.includes('password')));
+    assert.ok(result.issues.some(i => i.includes('api_key')));
+  });
+
+  // ==================== STANDALONE HELPERS ====================
   console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 11: CI/CD INTEGRATION');
+  console.log('STANDALONE HELPERS');
   console.log('='.repeat(60));
 
-  // Test 16: Generate CI/CD reports
-  await test('Generate JUnit XML report', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const testResults = [
-      { name: 'test-validation-1', passed: true, duration: 10 },
-      { name: 'test-validation-2', passed: false, duration: 15, error: 'Schema mismatch' }
-    ];
-    const xml = validator.generateJUnitReport(testResults, './reports/junit.xml');
-    assert.ok(xml.includes('<?xml'), 'Should be valid XML');
-    assert.ok(xml.includes('<testsuite'), 'Should contain testsuite');
-    assert.ok(fs.existsSync('./reports/junit.xml'), 'Should write file');
+  await test('validate() inline schema', () => {
+    const result = validate({ type: 'object', properties: { x: { type: 'number' } } }, { x: 42 });
+    assert.strictEqual(result.valid, true);
   });
 
-  // Test 17: Generate HTML report
-  await test('Generate HTML report', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const testResults = [
-      { name: 'test-1', passed: true, duration: 10 },
-      { name: 'test-2', passed: false, duration: 15, error: 'Error message' }
-    ];
-    const html = validator.generateHTMLReport(testResults, './reports/report.html');
-    assert.ok(html.includes('<!DOCTYPE html>'), 'Should be valid HTML');
-    assert.ok(html.includes('test-1'), 'Should include test names');
-    assert.ok(fs.existsSync('./reports/report.html'), 'Should write file');
+  await test('assertSchema() throws on invalid', () => {
+    assert.throws(() => assertSchema({ type: 'object', properties: { x: { type: 'number' } } }, { x: 'not a number' }));
   });
 
+  await test('assertStatus() checks status code', () => {
+    assertStatus({ status: 200 }, 200);
+    assert.throws(() => assertStatus({ status: 404 }, 200));
+  });
+
+  await test('assertFields() checks field presence', () => {
+    assertFields({ user: { name: 'John', age: 30 } }, ['user.name', 'user.age']);
+    assert.throws(() => assertFields({ user: { name: 'John' } }, ['user.email']));
+  });
+
+  await test('assertType() checks value type', () => {
+    assertType('hello', 'string');
+    assertType(42, 'number');
+    assertType(null, 'null');
+    assertType([1, 2], 'array');
+    assert.throws(() => assertType('hello', 'number'));
+  });
+
+  await test('schemaFrom() generates schema from sample', () => {
+    const schema = schemaFrom({ id: 1, name: 'test' });
+    assert.strictEqual(schema.type, 'object');
+    assert.ok(schema.properties.id);
+    assert.ok(schema.properties.name);
+  });
+
+  // ==================== NEW ASSERTION HELPERS ====================
   console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 12: SCHEMA MIGRATION');
+  console.log('NEW ASSERTION HELPERS');
   console.log('='.repeat(60));
 
-  // Test 18: Migrate schema
-  await test('Migrate schema with transformations', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const oldSchema = {
-      type: 'object',
-      properties: {
-        userName: { type: 'string' },
-        userAge: { type: 'integer' }
-      }
-    };
-    const rules = [
-      { type: 'rename', from: 'userName', to: 'name' },
-      { type: 'rename', from: 'userAge', to: 'age' }
-    ];
-    const migrated = validator.migrateSchema(oldSchema, rules);
-    assert.ok(migrated.properties.name, 'Should rename userName to name');
-    assert.ok(migrated.properties.age, 'Should rename userAge to age');
-    assert.ok(!migrated.properties.userName, 'Old field should be removed');
+  await test('assertArrayOf() validates each item in array', () => {
+    const itemSchema = { type: 'object', properties: { id: { type: 'number' } }, required: ['id'] };
+    assertArrayOf([{ id: 1 }, { id: 2 }, { id: 3 }], itemSchema);
+    assert.throws(() => assertArrayOf([{ id: 1 }, { id: 'bad' }], itemSchema));
+    assert.throws(() => assertArrayOf('not an array', itemSchema));
   });
 
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 13: FUZZY MATCHING & TOLERANCE');
-  console.log('='.repeat(60));
-
-  // Test 19: Validate with tolerance
-  await test('Validate with fuzzy matching tolerance', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const schema = {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        score: { type: 'number' }
-      },
-      required: ['name', 'score']
-    };
-    const data = { name: 'John Doe', score: 95.5, extraField: 'ignored' };
-    const result = validator.validateWithTolerance(schema, data, {
-      allowExtraFields: true,
-      numericTolerance: 0.1,
-      stringSimilarityThreshold: 0.8
-    });
-    assert.strictEqual(result.valid, true, 'Should validate with tolerance');
+  await test('assertEnum() checks allowed values', () => {
+    assertEnum('active', ['active', 'inactive', 'pending']);
+    assert.throws(() => assertEnum('deleted', ['active', 'inactive', 'pending']));
   });
 
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 14: BATCH VALIDATION');
-  console.log('='.repeat(60));
-
-  // Test 20: Batch validation
-  await test('Batch validate multiple endpoints', async () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const validations = [
-      { folder: 'test/api', name: 'TestAssets', data: testData[0] },
-      { folder: 'test/api', name: 'TestAssets', data: testData[1] }
-    ];
-    const results = await validator.batchValidate(validations, { concurrency: 2 });
-    assert.ok(Array.isArray(results), 'Should return array of results');
-    assert.strictEqual(results.length, 2, 'Should have results for all validations');
+  await test('assertMatch() checks regex pattern', () => {
+    assertMatch('550e8400-e29b-41d4-a716-446655440000', /^[0-9a-f-]{36}$/);
+    assert.throws(() => assertMatch('not-a-uuid', /^[0-9a-f]{8}-/));
+    assert.throws(() => assertMatch(123, /\d+/));
   });
 
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 15: RUNTIME SCHEMA MODIFICATION');
-  console.log('='.repeat(60));
-
-  // Test 21: Modify schema at runtime
-  await test('Modify schema at runtime', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const schema = {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        name: { type: 'string' }
-      },
-      required: ['id']
-    };
-    const modified = validator.modifySchema(schema, {
-      addRequired: ['name'],
-      removeRequired: ['id'],
-      addPattern: { field: 'id', pattern: '^[0-9a-f-]+$' }
-    });
-    assert.ok(modified.required.includes('name'), 'Should add name to required');
-    assert.ok(!modified.required.includes('id'), 'Should remove id from required');
-    assert.strictEqual(modified.properties.id.pattern, '^[0-9a-f-]+$', 'Should add pattern');
+  await test('assertRange() checks numeric range', () => {
+    assertRange(5, 1, 10);
+    assertRange(1, 1, 10);
+    assertRange(10, 1, 10);
+    assert.throws(() => assertRange(11, 1, 10));
+    assert.throws(() => assertRange(0, 1, 10));
+    assert.throws(() => assertRange('five', 1, 10));
   });
 
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 16: SECURITY VALIDATION');
-  console.log('='.repeat(60));
-
-  // Test 22: Security validation - PII detection
-  await test('Detect PII in data', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const data = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      ssn: '123-45-6789',
-      creditCard: '4111-1111-1111-1111'
-    };
-    const result = validator.validateSecurity(data, { checkPII: true });
-    assert.ok(result.hasPII, 'Should detect PII');
-    assert.ok(result.piiFields.length > 0, 'Should identify PII fields');
+  await test('assertNonEmpty() checks for non-empty values', () => {
+    assertNonEmpty('hello');
+    assertNonEmpty([1, 2]);
+    assertNonEmpty({ a: 1 });
+    assertNonEmpty(42);
+    assert.throws(() => assertNonEmpty(null));
+    assert.throws(() => assertNonEmpty(undefined));
+    assert.throws(() => assertNonEmpty(''));
+    assert.throws(() => assertNonEmpty([]));
+    assert.throws(() => assertNonEmpty({}));
   });
 
-  // Test 23: GDPR compliance check
-  await test('Check GDPR compliance', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const data = {
-      userId: '123',
-      email: 'user@example.com',
-      consent: true
-    };
-    const result = validator.validateSecurity(data, { 
-      checkPII: true, 
-      complianceStandard: 'GDPR' 
-    });
-    assert.ok(result.complianceChecks, 'Should perform compliance checks');
+  await test('assertResponseTime() checks response time', () => {
+    assertResponseTime({ getResponseTime: () => 100 }, 500);
+    assertResponseTime({ responseTime: 100 }, 500);
+    assert.throws(() => assertResponseTime({ getResponseTime: () => 600 }, 500));
+    assert.throws(() => assertResponseTime({}, 500));
   });
 
-  console.log('\n' + '='.repeat(60));
-  console.log('FEATURE 17: PERFORMANCE BENCHMARKING');
-  console.log('='.repeat(60));
-
-  // Test 24: Benchmark validation performance
-  await test('Benchmark validation performance', () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const schema = {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        name: { type: 'string' },
-        value: { type: 'number' }
-      }
-    };
-    const data = { id: '123', name: 'Test', value: 42 };
-    const benchmark = validator.benchmarkValidation(schema, data, { iterations: 100 });
-    assert.ok(benchmark.averageTime > 0, 'Should measure average time');
-    assert.ok(benchmark.minTime > 0, 'Should measure min time');
-    assert.ok(benchmark.maxTime > 0, 'Should measure max time');
-    assert.ok(benchmark.opsPerSec > 0, 'Should calculate ops/sec');
+  await test('assertDateBetween() checks date range', () => {
+    assertDateBetween('2024-06-15', '2024-01-01', '2024-12-31');
+    assert.throws(() => assertDateBetween('2023-06-15', '2024-01-01', '2024-12-31'));
+    assert.throws(() => assertDateBetween('not-a-date', '2024-01-01', '2024-12-31'));
   });
 
-  // Test 25: Measure performance
-  await test('Measure validation performance', async () => {
-    const validator = new SchemaValidator(testSchemaPath);
-    const measurements = await validator.measurePerformance('test/api', 'TestAssets', testData);
-    assert.ok(measurements.validationTime >= 0, 'Should measure validation time');
-  });
-
-  // Wait for all tests to finish
+  // Wait for all tests
   await Promise.allSettled(pendingTests);
-
-  // Cleanup
   await cleanup();
 
   // Print summary
@@ -573,13 +352,10 @@ async function runTests() {
   console.log(`Failed: ${failedTests} ✗`);
   console.log('='.repeat(60));
 
-  if (failedTests > 0) {
-    process.exit(1);
-  }
+  if (failedTests > 0) process.exit(1);
 }
 
 runTests().catch(error => {
   console.error('Test suite failed:', error);
-  cleanup();
   process.exit(1);
 });
