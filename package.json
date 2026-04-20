@@ -29,8 +29,7 @@
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
     "generate-schema": "^2.6.0",
-    "js-yaml": "^4.1.1",
-    "uuid": "^14.0.0"
+    "js-yaml": "^4.1.1"
   },
   "repository": {
     "type": "git",
