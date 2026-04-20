@@ -9,16 +9,10 @@
   },
   "keywords": [
     "bruno",
-    "bruno-api",
     "json-schema",
-    "validation",
     "api-testing",
     "schema-validation",
-    "contract-testing",
-    "api",
-    "testing",
-    "schema-generator",
-    "api-validator"
+    "contract-testing"
   ],
   "author": "Vikas Yadav <vikas.yadav@eneco.com>",
   "license": "MIT",
@@ -27,8 +21,6 @@
   },
   "dependencies": {
     "ajv": "^8.18.0",
-    "ajv-formats": "^3.0.1",
-    "generate-schema": "^2.6.0",
     "js-yaml": "^4.1.1"
   },
   "repository": {
